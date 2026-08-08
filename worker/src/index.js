@@ -1,8 +1,8 @@
-// CYBERDUDEBIVASH® Threat Intel Worker v6.1 — P0 HOTFIX
-// Deploy: wrangler deploy (from worker/ directory)
+// CYBERDUDEBIVASH® Threat Intel Worker v6.2 — P0 PRODUCTION FIX
+// Security: INGEST_SECRET consumed from Cloudflare Worker Secret binding ONLY
+// Deploy: wrangler deploy
 
-const VERSION = '6.1.0-p0fix';
-const INGEST_SECRET = 'CYBERDUDEBIVASH_INGEST_SECRET_CHANGE_ME';
+const VERSION = '6.2.0-p0prod';
 const CORS_ORIGIN = 'https://army.cyberdudebivash.in';
 const FALLBACK_ORIGIN = 'https://cyberdudebivash-army-api.iambivash-bn.workers.dev';
 
@@ -92,6 +92,17 @@ function buildT({ id, title, description, severity, score, source, sourceUrl, pu
   };
 }
 
+// --- Constant-time comparison to prevent timing attacks ---
+function constantTimeCompare(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
 // --- Fetchers ---
 async function fetchNVD() {
   const d = new Date();
@@ -141,7 +152,7 @@ async function fetchCISA() {
 
 async function fetchGitHub() {
   const r = await fetchTimeout('https://api.github.com/advisories?per_page=100&sort=published&direction=desc', {
-    headers: { 'Accept': 'application/vnd.github+json', 'User-Agent': 'CYBERDUDEBIVASH-Worker/6.1' }
+    headers: { 'Accept': 'application/vnd.github+json', 'User-Agent': 'CYBERDUDEBIVASH-Worker/6.2' }
   }, 10000);
   if (!r.ok) throw new Error('GitHub HTTP ' + r.status);
   const j = await r.json();
@@ -248,7 +259,7 @@ const FETCHERS = {
   circl: fetchCIRCL, trident: fetchTrident, osv: fetchOSV
 };
 
-// --- Ingestion ---
+// --- Ingestion Engine ---
 async function ingestAll(env) {
   const results = {};
   const health = {};
@@ -294,7 +305,7 @@ async function ingestAll(env) {
   return { success: true, aggregated: aggregated.length, sources: results };
 }
 
-// --- Handlers ---
+// --- API Handlers ---
 async function handleHealth(request, env, origin) {
   const metaRaw = await env.THREAT_INTEL_KV.get('threats:meta');
   const meta = metaRaw ? JSON.parse(metaRaw) : null;
@@ -356,14 +367,31 @@ async function handleThreats(request, env, origin) {
   return json({ threats: data.slice(offset, offset + limit), pagination: { total, limit, offset, hasMore: offset + limit < total }, filters: { source: srcFilter, severity: sevFilter, search } }, 200, origin);
 }
 
+// P0 FIX: Use env.INGEST_SECRET from Cloudflare Worker Secret binding
+// Fail-closed: if binding is missing, reject ALL requests
 async function handleIngest(request, env, origin) {
   const secret = new URL(request.url).searchParams.get('secret');
-  if (secret !== INGEST_SECRET) return err('Unauthorized — invalid ingest secret', 401, origin);
+
+  // Fail closed: reject if binding is missing
+  if (!env.INGEST_SECRET) {
+    return err('Unauthorized — server configuration error', 401, origin);
+  }
+
+  // Reject if no secret provided
+  if (!secret) {
+    return err('Unauthorized — missing ingest secret', 401, origin);
+  }
+
+  // Constant-time comparison to prevent timing attacks
+  if (!constantTimeCompare(secret, env.INGEST_SECRET)) {
+    return err('Unauthorized — invalid ingest secret', 401, origin);
+  }
+
   const result = await ingestAll(env);
   return json(result, 200, origin);
 }
 
-// --- Main ---
+// --- Main Router ---
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -392,6 +420,7 @@ export default {
     }
   },
 
+  // Scheduled ingestion does NOT require URL secret — direct env access
   async scheduled(event, env, ctx) {
     await ingestAll(env);
   }
