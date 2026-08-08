@@ -3,685 +3,1148 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CYBERDUDEBIVASH — AI Security Threat Command</title>
+<title>CYBERDUDEBIVASH® — AI Threat Command ARMY v6.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg-deep: #020408;
-    --bg-panel: rgba(10, 15, 30, 0.65);
-    --bg-card: rgba(16, 22, 42, 0.55);
-    --border-subtle: rgba(255, 255, 255, 0.06);
-    --border-glow: rgba(0, 240, 255, 0.15);
-    --text-primary: #f0f4f8;
-    --text-secondary: #8b9bb4;
-    --text-muted: #4a5568;
-    --cyan: #00f0ff;
-    --cyan-dim: rgba(0, 240, 255, 0.12);
-    --red: #ff2a6d;
-    --red-dim: rgba(255, 42, 109, 0.12);
-    --orange: #ff9f1c;
-    --orange-dim: rgba(255, 159, 28, 0.12);
-    --green: #05ffa1;
-    --green-dim: rgba(5, 255, 161, 0.12);
-    --blue: #3b82f6;
-    --blue-dim: rgba(59, 130, 246, 0.12);
-    --purple: #a855f7;
-    --font-ui: 'Inter', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
-    --font-display: 'Orbitron', sans-serif;
-  }
+:root {
+  --bg-deep: #050508;
+  --bg-panel: rgba(15, 18, 30, 0.72);
+  --glass-border: rgba(100, 130, 255, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.04);
+  --text-primary: #e8eaf6;
+  --text-secondary: #8892a8;
+  --text-muted: #4a5570;
+  --accent-cyan: #00e5ff;
+  --accent-blue: #2979ff;
+  --accent-green: #00e676;
+  --accent-red: #ff1744;
+  --accent-orange: #ff9100;
+  --accent-purple: #b388ff;
+  --accent-pink: #ff4081;
+  --accent-amber: #ffc400;
+  --accent-emerald: #00bfa5;
+  --font-header: 'Orbitron', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-body: 'Inter', sans-serif;
+  --source-nvd: #3b82f6;
+  --source-cisa: #ef4444;
+  --source-github: #8b5cf6;
+  --source-circl: #10b981;
+  --source-trident: #f59e0b;
+  --source-osv: #06b6d4;
+  --source-threatfox: #ec4899;
+  --source-urlhaus: #f97316;
+}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    background: var(--bg-deep);
-    color: var(--text-primary);
-    font-family: var(--font-ui);
-    min-height: 100vh;
-    overflow-x: hidden;
-    line-height: 1.5;
-  }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-  /* Background */
-  #bgCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.4; }
-  .scanlines { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 240, 255, 0.015) 2px, rgba(0, 240, 255, 0.015) 4px); }
-  .vignette { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none;
-    background: radial-gradient(ellipse at center, transparent 0%, rgba(2,4,8,0.6) 100%); }
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
 
-  .app { position: relative; z-index: 10; max-width: 1440px; margin: 0 auto; padding: 0 24px; }
+#particle-canvas {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 0; pointer-events: none;
+}
 
-  /* ===== HEADER ===== */
-  .header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 24px 0; border-bottom: 1px solid var(--border-subtle);
-    margin-bottom: 0; flex-wrap: wrap; gap: 16px;
-  }
-  .brand { display: flex; align-items: center; gap: 16px; }
-  .brand-logo {
-    width: 48px; height: 48px; border-radius: 12px;
-    background: linear-gradient(135deg, var(--cyan), var(--blue));
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; color: #000;
-    box-shadow: 0 0 30px rgba(0, 240, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.3);
-    position: relative; overflow: hidden;
-  }
-  .brand-logo::after {
-    content: ''; position: absolute; top: -50%; left: -50%;
-    width: 200%; height: 200%;
-    background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%);
-    animation: shimmer 3s infinite;
-  }
-  @keyframes shimmer { 0% { transform: translateX(-100%) rotate(45deg); } 100% { transform: translateX(100%) rotate(45deg); } }
-  .brand-text h1 {
-    font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; letter-spacing: 1px;
-    background: linear-gradient(135deg, #fff 0%, var(--cyan) 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .brand-text p { font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 3px; text-transform: uppercase; margin-top: 2px; }
-  .header-right { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
-  .status-pill {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 16px; background: var(--green-dim); border: 1px solid rgba(5, 255, 161, 0.2);
-    border-radius: 100px; font-size: 0.75rem; font-weight: 600; color: var(--green);
-    text-transform: uppercase; letter-spacing: 1px;
-  }
-  .pulse-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green); animation: pulse 2s infinite; }
-  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); } }
-  .clock { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary); text-align: right; }
-  .clock .time { color: var(--text-primary); font-weight: 600; font-size: 0.95rem; }
+.scanlines {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  pointer-events: none; z-index: 1;
+}
 
-  /* ===== ECOSYSTEM NAV BAR ===== */
-  .eco-nav {
-    display: flex; gap: 0; overflow-x: auto;
-    border-bottom: 1px solid var(--border-subtle);
-    margin-bottom: 32px; padding: 0;
-    scrollbar-width: none;
-  }
-  .eco-nav::-webkit-scrollbar { display: none; }
-  .eco-nav-item {
-    flex: 1; min-width: 140px; padding: 14px 16px;
-    text-align: center; text-decoration: none; color: var(--text-secondary);
-    font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
-    border-bottom: 2px solid transparent; transition: all 0.2s;
-    white-space: nowrap; position: relative;
-  }
-  .eco-nav-item:hover { color: var(--text-primary); background: rgba(255,255,255,0.02); }
-  .eco-nav-item.active { color: var(--cyan); border-bottom-color: var(--cyan); }
-  .eco-nav-item .eco-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
-  .eco-nav-item .eco-dot.live { background: var(--green); box-shadow: 0 0 6px var(--green); }
-  .eco-nav-item .eco-dot.beta { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+.container { position: relative; z-index: 2; max-width: 1440px; margin: 0 auto; padding: 0 24px; }
 
-  /* ===== GLASS ===== */
-  .glass {
-    background: var(--bg-panel); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--border-subtle); border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04);
-  }
-  .glass-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-  .glass-hover:hover {
-    border-color: var(--border-glow);
-    box-shadow: 0 12px 40px rgba(0, 240, 255, 0.08), inset 0 1px 0 rgba(255,255,255,0.06);
-    transform: translateY(-2px);
-  }
+/* Header */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 0; border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 20px; flex-wrap: wrap; gap: 16px;
+}
 
-  /* ===== STATS ===== */
-  .stats-grid {
-    display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 32px;
-  }
-  .stat-box { padding: 24px 20px; text-align: center; position: relative; overflow: hidden; }
-  .stat-box::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent-color), transparent); opacity: 0.6;
-  }
-  .stat-box.critical { --accent-color: var(--red); background: linear-gradient(180deg, var(--red-dim), var(--bg-card)); }
-  .stat-box.ai { --accent-color: var(--cyan); background: linear-gradient(180deg, var(--cyan-dim), var(--bg-card)); }
-  .stat-box.kev { --accent-color: var(--orange); background: linear-gradient(180deg, var(--orange-dim), var(--bg-card)); }
-  .stat-box.total { --accent-color: var(--blue); background: linear-gradient(180deg, var(--blue-dim), var(--bg-card)); }
-  .stat-box.score { --accent-color: var(--purple); background: linear-gradient(180deg, rgba(168,85,247,0.12), var(--bg-card)); }
-  .stat-box.sources { --accent-color: var(--green); background: linear-gradient(180deg, var(--green-dim), var(--bg-card)); }
-  .stat-icon { font-size: 1.5rem; margin-bottom: 8px; opacity: 0.8; }
-  .stat-value { font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--accent-color); line-height: 1; margin-bottom: 6px; text-shadow: 0 0 20px var(--accent-color); }
-  .stat-label { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+.brand {
+  display: flex; align-items: center; gap: 14px;
+}
 
-  /* ===== MAIN GRID ===== */
-  .main-grid { display: grid; grid-template-columns: 1fr 380px; gap: 24px; margin-bottom: 32px; }
-  @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 600px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .app { padding: 0 16px; } .header { flex-direction: column; align-items: flex-start; } .eco-nav-item { min-width: 120px; padding: 12px 10px; font-size: 0.6rem; } }
+.brand-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; box-shadow: 0 0 20px rgba(0,229,255,0.3);
+}
 
-  /* ===== SECTION HEADERS ===== */
-  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 0 4px; }
-  .section-title { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
-  .section-title .line { width: 24px; height: 2px; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
-  .section-meta { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); }
+.brand-text h1 {
+  font-family: var(--font-header); font-size: 22px; font-weight: 800;
+  background: linear-gradient(90deg, var(--text-primary), var(--accent-cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: 1px;
+}
 
-  /* ===== THREAT CARDS ===== */
-  .threat-list { display: flex; flex-direction: column; gap: 12px; }
-  .threat-card { padding: 20px 24px; position: relative; overflow: hidden; cursor: pointer; }
-  .threat-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--severity-color); box-shadow: 0 0 12px var(--severity-color); }
-  .threat-card.CRITICAL { --severity-color: var(--red); }
-  .threat-card.HIGH { --severity-color: var(--orange); }
-  .threat-card.MEDIUM { --severity-color: var(--cyan); }
-  .threat-card.LOW { --severity-color: var(--green); }
-  .threat-card.UNKNOWN { --severity-color: var(--text-muted); }
-  .threat-card:hover { border-color: var(--severity-color); box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 20px var(--severity-dim); transform: translateX(4px); }
-  .threat-card.CRITICAL:hover { --severity-dim: var(--red-dim); }
-  .threat-card.HIGH:hover { --severity-dim: var(--orange-dim); }
-  .threat-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
-  .cve-id { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: var(--cyan); letter-spacing: 0.5px; }
-  .badges { display: flex; gap: 6px; flex-wrap: wrap; }
-  .badge { padding: 3px 10px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid; }
-  .badge-sev-CRITICAL { color: var(--red); border-color: rgba(255,42,109,0.3); background: var(--red-dim); }
-  .badge-sev-HIGH { color: var(--orange); border-color: rgba(255,159,28,0.3); background: var(--orange-dim); }
-  .badge-sev-MEDIUM { color: var(--cyan); border-color: rgba(0,240,255,0.3); background: var(--cyan-dim); }
-  .badge-kev { color: var(--red); border-color: rgba(255,42,109,0.3); background: var(--red-dim); }
-  .badge-ai { color: var(--cyan); border-color: rgba(0,240,255,0.3); background: var(--cyan-dim); }
-  .threat-title { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; line-height: 1.4; }
-  .threat-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .threat-footer { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
-  .threat-footer span { display: flex; align-items: center; gap: 5px; }
-  .threat-footer .score { color: var(--orange); font-weight: 700; }
-  .threat-footer .due { color: var(--red); }
-  .tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-  .tag-pill { padding: 2px 8px; border-radius: 3px; font-size: 0.65rem; color: var(--text-secondary); background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); font-family: var(--font-mono); }
+.brand-text p {
+  font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px;
+}
 
-  /* ===== SIDEBAR ===== */
-  .widget { padding: 24px; margin-bottom: 20px; }
-  .widget-title { font-family: var(--font-display); font-size: 0.7rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-  .widget-title::before { content: ''; width: 8px; height: 8px; background: var(--cyan); border-radius: 2px; box-shadow: 0 0 8px var(--cyan); }
+.live-pulse {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.2);
+  padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  color: var(--accent-green); font-family: var(--font-mono);
+}
 
-  /* Donut */
-  .chart-container { display: flex; align-items: center; justify-content: center; position: relative; height: 180px; }
-  .donut-center { position: absolute; text-align: center; }
-  .donut-center .num { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; color: var(--text-primary); }
-  .donut-center .label { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
-  .chart-legend { display: flex; justify-content: center; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--text-secondary); }
-  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+.pulse-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green);
+  box-shadow: 0 0 10px var(--accent-green); animation: pulse 2s infinite;
+}
 
-  /* Sources */
-  .source-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); }
-  .source-row:last-child { border-bottom: none; }
-  .source-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); }
-  .source-info { flex: 1; }
-  .source-name { font-size: 0.85rem; font-weight: 600; }
-  .source-status { font-size: 0.7rem; margin-top: 2px; }
-  .source-status.healthy { color: var(--green); }
-  .source-status.degraded { color: var(--orange); }
-  .source-status.down { color: var(--red); }
-  .health-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-top: 6px; overflow: hidden; }
-  .health-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
-  .health-fill.healthy { background: var(--green); box-shadow: 0 0 8px var(--green); }
-  .health-fill.degraded { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
-  .health-fill.down { background: var(--red); box-shadow: 0 0 8px var(--red); }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
 
-  /* Timeline */
-  .timeline { position: relative; padding-left: 20px; }
-  .timeline::before { content: ''; position: absolute; left: 5px; top: 0; bottom: 0; width: 1px; background: linear-gradient(180deg, var(--cyan), transparent); }
-  .timeline-item { position: relative; padding-bottom: 16px; }
-  .timeline-item::before { content: ''; position: absolute; left: -16px; top: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
-  .timeline-time { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); }
-  .timeline-text { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+.header-right {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
 
-  /* Pagination */
-  .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 24px; padding-bottom: 8px; }
-  .page-btn { min-width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-secondary); border-radius: 8px; font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
-  .page-btn:hover:not(:disabled) { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 12px rgba(0,240,255,0.1); }
-  .page-btn.active { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); font-weight: 700; box-shadow: 0 0 12px rgba(0,240,255,0.15); }
-  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.clock-box {
+  background: var(--bg-panel); backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border); border-radius: 8px;
+  padding: 8px 14px; text-align: center;
+}
 
-  /* ===== FOOTER ===== */
-  .footer { text-align: center; padding: 32px; border-top: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 0.8rem; }
-  .footer .brand-line { font-family: var(--font-display); color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 2px; }
+.clock-box .label {
+  font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
+}
 
-  /* ===== ECOSYSTEM FOOTER STRIP ===== */
-  .eco-footer-strip {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 32px;
-  }
-  @media (max-width: 1000px) { .eco-footer-strip { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 600px) { .eco-footer-strip { grid-template-columns: 1fr; } }
+.clock-box .time {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--accent-cyan);
+}
 
-  .eco-mini-card {
-    padding: 20px;
-    text-decoration: none;
-    color: inherit;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    position: relative;
-    overflow: hidden;
-  }
-  .eco-mini-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--mini-accent), transparent); opacity: 0.5;
-  }
-  .eco-mini-card:hover { border-color: var(--mini-accent); transform: translateY(-3px); }
-  .eco-mini-card .mini-icon { font-size: 1.4rem; }
-  .eco-mini-card .mini-title { font-family: var(--font-display); font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; }
-  .eco-mini-card .mini-desc { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5; }
-  .eco-mini-card .mini-link { font-family: var(--font-mono); font-size: 0.6rem; color: var(--mini-accent); text-transform: uppercase; letter-spacing: 1px; }
+/* Ecosystem Nav */
+.ecosystem-nav {
+  display: flex; gap: 8px; overflow-x: auto; padding: 12px 0;
+  border-bottom: 1px solid var(--glass-border); margin-bottom: 20px;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.ecosystem-nav::-webkit-scrollbar { display: none; }
 
-  .mini-hub { --mini-accent: var(--cyan); background: linear-gradient(180deg, var(--cyan-dim), var(--bg-card)); }
-  .mini-intel { --mini-accent: var(--red); background: linear-gradient(180deg, var(--red-dim), var(--bg-card)); }
-  .mini-army { --mini-accent: var(--orange); background: linear-gradient(180deg, var(--orange-dim), var(--bg-card)); }
-  .mini-tools { --mini-accent: var(--green); background: linear-gradient(180deg, var(--green-dim), var(--bg-card)); }
-  .mini-blog { --mini-accent: var(--blue); background: linear-gradient(180deg, var(--blue-dim), var(--bg-card)); }
-  .mini-academy { --mini-accent: var(--purple); background: linear-gradient(180deg, rgba(168,85,247,0.12), var(--bg-card)); }
-  .mini-cti { --mini-accent: #14b8a6; background: linear-gradient(180deg, rgba(20,184,166,0.12), var(--bg-card)); }
-  .mini-portal { --mini-accent: #e2e8f0; background: linear-gradient(180deg, rgba(226,232,240,0.08), var(--bg-card)); }
+.ecosystem-nav a {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 6px;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+  color: var(--text-secondary); text-decoration: none; font-size: 12px; font-weight: 500;
+  white-space: nowrap; transition: all 0.2s;
+}
+.ecosystem-nav a:hover {
+  background: rgba(0,229,255,0.08); border-color: rgba(0,229,255,0.3); color: var(--text-primary);
+}
+.ecosystem-nav a.active {
+  background: rgba(0,229,255,0.12); border-color: var(--accent-cyan); color: var(--accent-cyan);
+}
+.ecosystem-nav .nav-dot { width: 6px; height: 6px; border-radius: 50%; }
+.nav-dot.live { background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
+.nav-dot.beta { background: var(--accent-orange); box-shadow: 0 0 6px var(--accent-orange); }
 
-  /* Loading & Error */
-  .skeleton-card { padding: 20px 24px; position: relative; overflow: hidden; }
-  .skeleton-line { height: 12px; background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; margin-bottom: 10px; }
-  .error-box { padding: 20px; border: 1px solid rgba(255,42,109,0.3); background: var(--red-dim); border-radius: 12px; color: var(--red); text-align: center; }
-  .error-box button { margin-top: 12px; padding: 8px 20px; background: var(--red); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
-  .hidden { display: none !important; }
-  .fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
-  @keyframes fadeIn { to { opacity: 1; } }
-  .stagger-1 { animation-delay: 0.1s; } .stagger-2 { animation-delay: 0.2s; } .stagger-3 { animation-delay: 0.3s; }
-  .stagger-4 { animation-delay: 0.4s; } .stagger-5 { animation-delay: 0.5s; } .stagger-6 { animation-delay: 0.6s; }
+/* Stats Grid */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;
+  margin-bottom: 24px;
+}
 
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+.stat-card {
+  background: var(--bg-panel); backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border); border-radius: 12px;
+  padding: 20px; position: relative; overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+}
+
+.stat-card.critical::before { background: linear-gradient(90deg, var(--accent-red), #ff5252); }
+.stat-card.high::before { background: linear-gradient(90deg, var(--accent-orange), #ffca28); }
+.stat-card.medium::before { background: linear-gradient(90deg, var(--accent-cyan), #00bcd4); }
+
+.stat-card .stat-label {
+  font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;
+}
+
+.stat-card .stat-value {
+  font-family: var(--font-header); font-size: 32px; font-weight: 800;
+  background: linear-gradient(90deg, var(--text-primary), var(--accent-cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.stat-card.critical .stat-value {
+  background: linear-gradient(90deg, var(--accent-red), #ff5252);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.stat-card .stat-change {
+  font-size: 11px; color: var(--accent-green); margin-top: 4px; font-weight: 500;
+}
+
+/* Source Distribution */
+.source-dist-section {
+  background: var(--bg-panel); backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border); border-radius: 12px;
+  padding: 20px; margin-bottom: 24px;
+}
+
+.source-dist-section h3 {
+  font-family: var(--font-header); font-size: 14px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.source-dist-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;
+}
+
+.source-dist-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; border-radius: 8px;
+  background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);
+}
+
+.source-dist-bar {
+  flex: 1; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;
+}
+
+.source-dist-fill {
+  height: 100%; border-radius: 3px; transition: width 1s ease;
+}
+
+.source-dist-info { min-width: 60px; text-align: right; }
+.source-dist-name { font-size: 12px; font-weight: 600; }
+.source-dist-count { font-size: 11px; color: var(--text-muted); }
+
+/* Source Health Panel */
+.source-health-section {
+  background: var(--bg-panel); backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border); border-radius: 12px;
+  padding: 20px; margin-bottom: 24px;
+}
+
+.source-health-section h3 {
+  font-family: var(--font-header); font-size: 14px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+}
+
+.source-health-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;
+}
+
+.source-health-card {
+  padding: 14px; border-radius: 10px;
+  background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);
+  transition: all 0.2s;
+}
+.source-health-card:hover { border-color: rgba(255,255,255,0.15); }
+
+.source-health-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+}
+
+.source-health-name {
+  display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px;
+}
+
+.source-health-status {
+  padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+}
+.status-healthy { background: rgba(0,230,118,0.12); color: var(--accent-green); border: 1px solid rgba(0,230,118,0.2); }
+.status-degraded { background: rgba(255,145,0,0.12); color: var(--accent-orange); border: 1px solid rgba(255,145,0,0.2); }
+.status-unknown { background: rgba(136,146,168,0.12); color: var(--text-muted); border: 1px solid rgba(136,146,168,0.2); }
+
+.source-health-meta {
+  display: flex; gap: 16px; font-size: 11px; color: var(--text-muted);
+}
+
+.source-health-meta span { display: flex; align-items: center; gap: 4px; }
+
+/* Filters Bar */
+.filters-bar {
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+  margin-bottom: 20px; padding: 16px;
+  background: var(--bg-panel); backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border); border-radius: 12px;
+}
+
+.filter-group { display: flex; align-items: center; gap: 8px; }
+
+.filter-group label {
+  font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+}
+
+.filter-tabs {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+
+.filter-tab {
+  padding: 6px 14px; border-radius: 6px; border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.03); color: var(--text-secondary);
+  font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+  font-family: var(--font-body);
+}
+
+.filter-tab:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); }
+
+.filter-tab.active {
+  background: rgba(0,229,255,0.15); border-color: var(--accent-cyan); color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(0,229,255,0.15);
+}
+
+.filter-tab.source-tab { border-left-width: 3px; }
+
+.search-input {
+  background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border);
+  border-radius: 8px; padding: 8px 14px; color: var(--text-primary);
+  font-family: var(--font-body); font-size: 13px; width: 240px;
+  outline: none; transition: all 0.2s;
+}
+.search-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 12px rgba(0,229,255,0.1); }
+.search-input::placeholder { color: var(--text-muted); }
+
+/* Threat Feed */
+.threat-feed { margin-bottom: 24px; }
+
+.feed-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+}
+
+.feed-header h2 {
+  font-family: var(--font-header); font-size: 18px;
+  display: flex; align-items: center; gap: 10px;
+}
+
+.feed-count { font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); }
+
+.threat-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px;
+}
+
+.threat-card {
+  background: var(--bg-panel); backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border); border-radius: 12px;
+  padding: 18px; position: relative; overflow: hidden;
+  transition: all 0.3s; cursor: pointer;
+}
+
+.threat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+
+.threat-card.critical { border-left: 3px solid var(--accent-red); }
+.threat-card.high { border-left: 3px solid var(--accent-orange); }
+.threat-card.medium { border-left: 3px solid var(--accent-cyan); }
+.threat-card.low { border-left: 3px solid var(--accent-green); }
+
+.threat-card.critical:hover { box-shadow: 0 12px 40px rgba(255,23,68,0.15); }
+.threat-card.high:hover { box-shadow: 0 12px 40px rgba(255,145,0,0.15); }
+
+.threat-header {
+  display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px;
+}
+
+.threat-id {
+  font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+  color: var(--accent-cyan); letter-spacing: 0.5px;
+}
+
+.threat-badges {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+
+.badge {
+  padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.badge-severity-critical { background: rgba(255,23,68,0.15); color: var(--accent-red); border: 1px solid rgba(255,23,68,0.3); }
+.badge-severity-high { background: rgba(255,145,0,0.15); color: var(--accent-orange); border: 1px solid rgba(255,145,0,0.3); }
+.badge-severity-medium { background: rgba(0,229,255,0.15); color: var(--accent-cyan); border: 1px solid rgba(0,229,255,0.3); }
+.badge-severity-low { background: rgba(0,230,118,0.15); color: var(--accent-green); border: 1px solid rgba(0,230,118,0.3); }
+
+.badge-source {
+  background: rgba(255,255,255,0.06); color: var(--text-secondary); border: 1px solid var(--glass-border);
+}
+
+.badge-kev { background: rgba(255,23,68,0.2); color: var(--accent-red); border: 1px solid rgba(255,23,68,0.4); animation: glow-red 2s infinite; }
+.badge-ai { background: rgba(0,229,255,0.2); color: var(--accent-cyan); border: 1px solid rgba(0,229,255,0.4); animation: glow-cyan 2s infinite; }
+
+@keyframes glow-red { 0%, 100% { box-shadow: 0 0 5px rgba(255,23,68,0.2); } 50% { box-shadow: 0 0 15px rgba(255,23,68,0.5); } }
+@keyframes glow-cyan { 0%, 100% { box-shadow: 0 0 5px rgba(0,229,255,0.2); } 50% { box-shadow: 0 0 15px rgba(0,229,255,0.5); } }
+
+.threat-title {
+  font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; line-height: 1.4;
+}
+
+.threat-desc {
+  font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.threat-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);
+}
+
+.threat-score {
+  display: flex; align-items: center; gap: 6px;
+}
+
+.score-bar {
+  width: 60px; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;
+}
+
+.score-fill {
+  height: 100%; border-radius: 2px; transition: width 1s ease;
+}
+
+/* Pagination */
+.pagination {
+  display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 24px;
+}
+
+.page-btn {
+  padding: 8px 16px; border-radius: 8px; border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.03); color: var(--text-secondary);
+  font-family: var(--font-body); font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: all 0.2s;
+}
+.page-btn:hover:not(:disabled) { background: rgba(0,229,255,0.1); border-color: var(--accent-cyan); color: var(--text-primary); }
+.page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.page-btn.active { background: rgba(0,229,255,0.15); border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+/* Loading & Error States */
+.loading-skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%; animation: shimmer 1.5s infinite;
+  border-radius: 8px; height: 120px; margin-bottom: 12px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.error-state {
+  text-align: center; padding: 40px; color: var(--accent-red);
+}
+
+.error-state h3 { font-family: var(--font-header); margin-bottom: 8px; }
+
+.retry-btn {
+  margin-top: 16px; padding: 10px 24px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent-red), #ff5252);
+  color: white; border: none; font-weight: 600; cursor: pointer;
+  font-family: var(--font-body); transition: all 0.2s;
+}
+.retry-btn:hover { transform: scale(1.05); box-shadow: 0 8px 24px rgba(255,23,68,0.3); }
+
+/* Debug Console */
+.debug-toggle {
+  position: fixed; top: 20px; right: 20px; z-index: 100;
+  padding: 8px 16px; border-radius: 8px;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+  color: var(--text-secondary); font-size: 11px; font-weight: 600;
+  cursor: pointer; font-family: var(--font-mono); transition: all 0.2s;
+}
+.debug-toggle:hover { background: rgba(0,229,255,0.1); color: var(--accent-cyan); }
+
+.debug-console {
+  position: fixed; bottom: 20px; right: 20px; width: 480px; max-height: 300px;
+  background: rgba(10, 12, 20, 0.95); backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border); border-radius: 12px;
+  z-index: 100; display: none; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.debug-console.visible { display: flex; }
+
+.debug-header {
+  padding: 12px 16px; border-bottom: 1px solid var(--glass-border);
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--font-header); font-size: 12px;
+}
+
+.debug-body {
+  padding: 12px 16px; overflow-y: auto; font-family: var(--font-mono); font-size: 11px;
+  line-height: 1.6; color: var(--text-secondary); max-height: 240px;
+}
+
+.debug-line { margin-bottom: 4px; }
+.debug-line.success { color: var(--accent-green); }
+.debug-line.error { color: var(--accent-red); }
+.debug-line.info { color: var(--accent-cyan); }
+
+/* Ecosystem Footer */
+.ecosystem-footer {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;
+  margin: 40px 0 24px;
+}
+
+.eco-card {
+  background: var(--bg-panel); backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border); border-radius: 12px;
+  padding: 16px; text-decoration: none; color: var(--text-primary);
+  transition: all 0.3s; position: relative; overflow: hidden;
+}
+
+.eco-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+  opacity: 0.6; transition: opacity 0.3s;
+}
+
+.eco-card:hover::before { opacity: 1; }
+.eco-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+
+.eco-card h4 { font-family: var(--font-header); font-size: 13px; margin-bottom: 6px; }
+.eco-card p { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+/* Footer */
+.footer {
+  text-align: center; padding: 30px 0; border-top: 1px solid var(--glass-border);
+  margin-top: 40px; color: var(--text-muted); font-size: 12px;
+}
+
+.footer a { color: var(--text-secondary); text-decoration: none; margin: 0 8px; transition: color 0.2s; }
+.footer a:hover { color: var(--accent-cyan); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .threat-grid { grid-template-columns: 1fr; }
+  .filters-bar { flex-direction: column; align-items: stretch; }
+  .search-input { width: 100%; }
+  .debug-console { width: calc(100% - 40px); left: 20px; right: 20px; }
+  .header { flex-direction: column; align-items: flex-start; }
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in { animation: fadeUp 0.5s ease forwards; }
 </style>
 </head>
 <body>
 
-<canvas id="bgCanvas"></canvas>
+<canvas id="particle-canvas"></canvas>
 <div class="scanlines"></div>
-<div class="vignette"></div>
 
-<div class="app">
+<button class="debug-toggle" onclick="toggleDebug()">🔍 Toggle Debug Console</button>
+<div class="debug-console" id="debugConsole">
+  <div class="debug-header">
+    <span>Debug Console</span>
+    <span style="cursor:pointer;" onclick="toggleDebug()">✕</span>
+  </div>
+  <div class="debug-body" id="debugBody"></div>
+</div>
 
-  <!-- HEADER -->
+<div class="container">
+
+  <!-- Header -->
   <header class="header">
     <div class="brand">
-      <div class="brand-logo">C</div>
+      <div class="brand-icon">🛡️</div>
       <div class="brand-text">
-        <h1>CYBERDUDEBIVASH</h1>
-        <p>AI Security Threat Command</p>
+        <h1>CYBERDUDEBIVASH®</h1>
+        <p>AI Threat Command — ARMY v6.0</p>
       </div>
     </div>
     <div class="header-right">
-      <div class="status-pill"><span class="pulse-dot"></span><span id="liveStatus">LIVE INTEL</span></div>
-      <div class="clock">
-        <div class="time" id="clockTime">--:--:--</div>
-        <div id="clockDate">IST | UTC</div>
+      <div class="live-pulse">
+        <div class="pulse-dot"></div>
+        <span id="connectionStatus">LIVE DATA</span>
+      </div>
+      <div class="clock-box">
+        <div class="label">IST</div>
+        <div class="time" id="clockIST">--:--:--</div>
+      </div>
+      <div class="clock-box">
+        <div class="label">UTC</div>
+        <div class="time" id="clockUTC">--:--:--</div>
       </div>
     </div>
   </header>
 
-  <!-- ECOSYSTEM NAVIGATION BAR -->
-  <nav class="eco-nav">
-    <a href="https://cyberdudebivash.in" target="_blank" class="eco-nav-item"><span class="eco-dot live"></span>Hub</a>
-    <a href="https://intel.cyberdudebivash.com" target="_blank" class="eco-nav-item"><span class="eco-dot live"></span>Sentinel</a>
-    <a href="https://army.cyberdudebivash.in" class="eco-nav-item active"><span class="eco-dot live"></span>ARMY</a>
-    <a href="https://cti.cyberdudebivash.in" target="_blank" class="eco-nav-item"><span class="eco-dot live"></span>CTI</a>
-    <a href="https://cyberdudebivash.com" target="_blank" class="eco-nav-item"><span class="eco-dot live"></span>Portal</a>
-    <a href="https://tools.cyberdudebivash.com" target="_blank" class="eco-nav-item"><span class="eco-dot live"></span>Tools</a>
-    <a href="https://blog.cyberdudebivash.in" target="_blank" class="eco-nav-item"><span class="eco-dot live"></span>Blog</a>
-    <a href="https://academy.cyberdudebivash.com" target="_blank" class="eco-nav-item"><span class="eco-dot beta"></span>Academy</a>
+  <!-- Ecosystem Nav -->
+  <nav class="ecosystem-nav">
+    <a href="https://cyberdudebivash.in" target="_blank"><span class="nav-dot live"></span>Hub</a>
+    <a href="https://intel.cyberdudebivash.com" target="_blank"><span class="nav-dot live"></span>Sentinel</a>
+    <a href="https://army.cyberdudebivash.in" class="active"><span class="nav-dot live"></span>ARMY</a>
+    <a href="https://cti.cyberdudebivash.in" target="_blank"><span class="nav-dot live"></span>CTI</a>
+    <a href="https://cyberdudebivash.com" target="_blank"><span class="nav-dot live"></span>Portal</a>
+    <a href="https://tools.cyberdudebivash.com" target="_blank"><span class="nav-dot live"></span>Tools</a>
+    <a href="https://blog.cyberdudebivash.in" target="_blank"><span class="nav-dot live"></span>Blog</a>
+    <a href="https://academy.cyberdudebivash.com" target="_blank"><span class="nav-dot beta"></span>Academy</a>
   </nav>
 
-  <!-- STATS -->
+  <!-- Stats -->
   <div class="stats-grid" id="statsGrid">
-    <div class="glass stat-box total glass-hover fade-in stagger-1">
-      <div class="stat-icon">🎯</div><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total Threats</div>
-    </div>
-    <div class="glass stat-box critical glass-hover fade-in stagger-2">
-      <div class="stat-icon">🔥</div><div class="stat-value" id="statCritical">0</div><div class="stat-label">Critical</div>
-    </div>
-    <div class="glass stat-box ai glass-hover fade-in stagger-3">
-      <div class="stat-icon">🤖</div><div class="stat-value" id="statAI">0</div><div class="stat-label">AI Threats</div>
-    </div>
-    <div class="glass stat-box kev glass-hover fade-in stagger-4">
-      <div class="stat-icon">⚡</div><div class="stat-value" id="statKEV">0</div><div class="stat-label">Known Exploited</div>
-    </div>
-    <div class="glass stat-box sources glass-hover fade-in stagger-5">
-      <div class="stat-icon">📡</div><div class="stat-value" id="statSources">0</div><div class="stat-label">Active Sources</div>
-    </div>
-    <div class="glass stat-box score glass-hover fade-in stagger-6">
-      <div class="stat-icon">📊</div><div class="stat-value" id="statScore">0.0</div><div class="stat-label">Avg Score</div>
+    <div class="stat-card"><div class="stat-label">Total Threats</div><div class="stat-value" id="statTotal">--</div></div>
+    <div class="stat-card critical"><div class="stat-label">Critical</div><div class="stat-value" id="statCritical">--</div></div>
+    <div class="stat-card high"><div class="stat-label">High</div><div class="stat-value" id="statHigh">--</div></div>
+    <div class="stat-card medium"><div class="stat-label">Medium</div><div class="stat-value" id="statMedium">--</div></div>
+    <div class="stat-card"><div class="stat-label">Active Sources</div><div class="stat-value" id="statSources">--</div></div>
+    <div class="stat-card"><div class="stat-label">Last Sync</div><div class="stat-value" style="font-size:18px;" id="statLastSync">--</div></div>
+  </div>
+
+  <!-- Source Distribution -->
+  <div class="source-dist-section">
+    <h3>📊 Source Distribution</h3>
+    <div class="source-dist-grid" id="sourceDistGrid">
+      <div class="loading-skeleton" style="height:40px;"></div>
     </div>
   </div>
 
-  <!-- MAIN GRID -->
-  <div class="main-grid">
-    <div>
-      <div class="section-header">
-        <div class="section-title"><span class="line"></span> Live Threat Feed</div>
-        <div class="section-meta" id="feedMeta">Loading...</div>
-      </div>
-      <div id="errorBox"></div>
-      <div class="threat-list" id="threatList">
-        <div class="glass skeleton-card"><div class="skeleton-line" style="width:30%;height:16px;"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div>
-        <div class="glass skeleton-card"><div class="skeleton-line" style="width:30%;height:16px;"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div>
-        <div class="glass skeleton-card"><div class="skeleton-line" style="width:30%;height:16px;"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div>
-        <div class="glass skeleton-card"><div class="skeleton-line" style="width:30%;height:16px;"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div>
-      </div>
-      <div class="pagination" id="pagination"></div>
-    </div>
-
-    <div>
-      <div class="glass widget">
-        <div class="widget-title">Severity Distribution</div>
-        <div class="chart-container">
-          <svg width="180" height="180" viewBox="0 0 180 180" id="severityChart">
-            <circle cx="90" cy="90" r="70" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="20"/>
-          </svg>
-          <div class="donut-center"><div class="num" id="donutTotal">0</div><div class="label">Threats</div></div>
-        </div>
-        <div class="chart-legend" id="chartLegend"></div>
-      </div>
-
-      <div class="glass widget">
-        <div class="widget-title">Source Health</div>
-        <div id="sourcesList">
-          <div class="source-row">
-            <div class="source-icon">📡</div>
-            <div class="source-info"><div class="source-name">NVD</div><div class="health-bar"><div class="health-fill" style="width:0%"></div></div></div>
-          </div>
-          <div class="source-row">
-            <div class="source-icon">🛡️</div>
-            <div class="source-info"><div class="source-name">CISA KEV</div><div class="health-bar"><div class="health-fill" style="width:0%"></div></div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="glass widget">
-        <div class="widget-title">Recent Activity</div>
-        <div class="timeline" id="timeline">
-          <div class="timeline-item"><div class="timeline-time">--:--</div><div class="timeline-text">Initializing threat sensors...</div></div>
-        </div>
-      </div>
+  <!-- Source Health -->
+  <div class="source-health-section">
+    <h3 onclick="toggleSourceHealth()">🔌 Source Health Monitor <span style="font-size:11px;color:var(--text-muted);">(click to toggle)</span></h3>
+    <div class="source-health-grid" id="sourceHealthGrid">
+      <div class="loading-skeleton" style="height:80px;"></div>
     </div>
   </div>
 
-  <!-- ECOSYSTEM FOOTER STRIP -->
-  <div class="section-header" style="margin-bottom:16px;">
-    <div class="section-title"><span class="line"></span> CYBERDUDEBIVASH Ecosystem</div>
-    <div class="section-meta">8 Integrated Platforms</div>
-  </div>
-  <div class="eco-footer-strip">
-    <a href="https://cyberdudebivash.in" target="_blank" class="glass eco-mini-card mini-hub glass-hover">
-      <div class="mini-icon">🌐</div>
-      <div class="mini-title">AI Security Hub</div>
-      <div class="mini-desc">Central command for AI-native cybersecurity and threat detection.</div>
-      <div class="mini-link">cyberdudebivash.in →</div>
-    </a>
-    <a href="https://intel.cyberdudebivash.com" target="_blank" class="glass eco-mini-card mini-intel glass-hover">
-      <div class="mini-icon">🛰</div>
-      <div class="mini-title">Sentinel APEX</div>
-      <div class="mini-desc">Enterprise threat intelligence with real-time CVE feeds.</div>
-      <div class="mini-link">intel.cyberdudebivash.com →</div>
-    </a>
-    <a href="https://army.cyberdudebivash.in" class="glass eco-mini-card mini-army glass-hover">
-      <div class="mini-icon">🔥</div>
-      <div class="mini-title">Threat Command</div>
-      <div class="mini-desc">Live AI Security Threat Intelligence dashboard. You are here.</div>
-      <div class="mini-link">army.cyberdudebivash.in →</div>
-    </a>
-    <a href="https://cti.cyberdudebivash.in" target="_blank" class="glass eco-mini-card mini-cti glass-hover">
-      <div class="mini-icon">🎯</div>
-      <div class="mini-title">CTI Platform</div>
-      <div class="mini-desc">Cyber Threat Intelligence with IoCs and actor profiles.</div>
-      <div class="mini-link">cti.cyberdudebivash.in →</div>
-    </a>
-    <a href="https://cyberdudebivash.com" target="_blank" class="glass eco-mini-card mini-portal glass-hover">
-      <div class="mini-icon">🏢</div>
-      <div class="mini-title">Official Portal</div>
-      <div class="mini-desc">Corporate portal for enterprise clients and compliance.</div>
-      <div class="mini-link">cyberdudebivash.com →</div>
-    </a>
-    <a href="https://tools.cyberdudebivash.com" target="_blank" class="glass eco-mini-card mini-tools glass-hover">
-      <div class="mini-icon">🛠</div>
-      <div class="mini-title">Cyber Tools</div>
-      <div class="mini-desc">Production-tested security tools and pentest utilities.</div>
-      <div class="mini-link">tools.cyberdudebivash.com →</div>
-    </a>
-    <a href="https://blog.cyberdudebivash.in" target="_blank" class="glass eco-mini-card mini-blog glass-hover">
-      <div class="mini-icon">📰</div>
-      <div class="mini-title">Threat Intel Blog</div>
-      <div class="mini-desc">Deep-dive analysis of emerging threats and zero-days.</div>
-      <div class="mini-link">blog.cyberdudebivash.in →</div>
-    </a>
-    <a href="https://academy.cyberdudebivash.com" target="_blank" class="glass eco-mini-card mini-academy glass-hover">
-      <div class="mini-icon">🎓</div>
-      <div class="mini-title">Academy</div>
-      <div class="mini-desc">Learn AI security, ethical hacking, and threat hunting.</div>
-      <div class="mini-link">academy.cyberdudebivash.com →</div>
-    </a>
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="filter-group">
+      <label>Source</label>
+      <div class="filter-tabs" id="sourceFilters">
+        <button class="filter-tab active" data-source="" onclick="setSourceFilter('')">ALL</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>Severity</label>
+      <div class="filter-tabs" id="severityFilters">
+        <button class="filter-tab active" data-severity="" onclick="setSeverityFilter('')">ALL</button>
+        <button class="filter-tab" data-severity="CRITICAL" onclick="setSeverityFilter('CRITICAL')">CRITICAL</button>
+        <button class="filter-tab" data-severity="HIGH" onclick="setSeverityFilter('HIGH')">HIGH</button>
+        <button class="filter-tab" data-severity="MEDIUM" onclick="setSeverityFilter('MEDIUM')">MEDIUM</button>
+        <button class="filter-tab" data-severity="LOW" onclick="setSeverityFilter('LOW')">LOW</button>
+      </div>
+    </div>
+    <div class="filter-group" style="margin-left:auto;">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search CVE, title, tags..." oninput="debounceSearch()">
+    </div>
   </div>
 
-  <!-- FOOTER -->
+  <!-- Threat Feed -->
+  <div class="threat-feed">
+    <div class="feed-header">
+      <h2>🔥 Live Threat Feed</h2>
+      <span class="feed-count" id="feedCount">Loading...</span>
+    </div>
+    <div class="threat-grid" id="threatGrid">
+      <div class="loading-skeleton"></div>
+      <div class="loading-skeleton"></div>
+      <div class="loading-skeleton"></div>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- Ecosystem Footer -->
+  <div class="ecosystem-footer">
+    <a href="https://cyberdudebivash.in" class="eco-card" target="_blank" style="--accent-cyan:#00e5ff;"><h4>🌐 AI Security Hub</h4><p>Central command for all cybersecurity operations</p></a>
+    <a href="https://intel.cyberdudebivash.com" class="eco-card" target="_blank"><h4>🛰️ Sentinel APEX</h4><p>Enterprise threat intelligence platform</p></a>
+    <a href="https://cti.cyberdudebivash.in" class="eco-card" target="_blank"><h4>🎯 CTI Platform</h4><p>Cyber threat intelligence & IOC analysis</p></a>
+    <a href="https://cyberdudebivash.com" class="eco-card" target="_blank"><h4>🏢 Official Portal</h4><p>Enterprise cybersecurity services</p></a>
+    <a href="https://tools.cyberdudebivash.com" class="eco-card" target="_blank"><h4>🛠️ Cybersecurity Tools</h4><p>Free security tools & utilities</p></a>
+    <a href="https://blog.cyberdudebivash.in" class="eco-card" target="_blank"><h4>📰 Threat Intel Blog</h4><p>Latest research & analysis</p></a>
+    <a href="https://academy.cyberdudebivash.com" class="eco-card" target="_blank"><h4>🎓 Cybersecurity Academy</h4><p>Training & certification programs</p></a>
+    <a href="https://army.cyberdudebivash.in" class="eco-card" target="_blank"><h4>🔥 Threat Command ARMY</h4><p>Live CVE dashboard & monitoring</p></a>
+  </div>
+
+  <!-- Footer -->
   <footer class="footer">
-    <div class="brand-line">CYBERDUDEBIVASH® — AI CYBERSECURITY ECOSYSTEM</div>
-    <div>Data sourced from NVD (nvd.nist.gov) and CISA KEV (cisa.gov) · Updated every 6 hours · © 2026</div>
-    <div style="margin-top:8px;font-size:0.75rem;">
-      <a href="https://cyberdudebivash.in" style="color:var(--text-muted);text-decoration:none;margin:0 8px;">Hub</a>·
-      <a href="https://intel.cyberdudebivash.com" style="color:var(--text-muted);text-decoration:none;margin:0 8px;">Sentinel</a>·
-      <a href="https://army.cyberdudebivash.in" style="color:var(--text-muted);text-decoration:none;margin:0 8px;">ARMY</a>·
-      <a href="https://cti.cyberdudebivash.in" style="color:var(--text-muted);text-decoration:none;margin:0 8px;">CTI</a>·
-      <a href="https://cyberdudebivash.com" style="color:var(--text-muted);text-decoration:none;margin:0 8px;">Portal</a>·
-      <a href="https://tools.cyberdudebivash.com" style="color:var(--text-muted);text-decoration:none;margin:0 8px;">Tools</a>·
-      <a href="https://blog.cyberdudebivash.in" style="color:var(--text-muted);text-decoration:none;margin:0 8px;">Blog</a>·
-      <a href="https://academy.cyberdudebivash.com" style="color:var(--text-muted);text-decoration:none;margin:0 8px;">Academy</a>
-    </div>
+    <p><strong>CYBERDUDEBIVASH®</strong> — India's 1st AI-Native Cybersecurity Platform</p>
+    <p style="margin-top:8px;">
+      <a href="https://cyberdudebivash.in" target="_blank">Hub</a> |
+      <a href="https://intel.cyberdudebivash.com" target="_blank">Sentinel</a> |
+      <a href="https://cti.cyberdudebivash.in" target="_blank">CTI</a> |
+      <a href="https://cyberdudebivash.com" target="_blank">Portal</a> |
+      <a href="https://tools.cyberdudebivash.com" target="_blank">Tools</a> |
+      <a href="https://blog.cyberdudebivash.in" target="_blank">Blog</a> |
+      <a href="https://academy.cyberdudebivash.com" target="_blank">Academy</a>
+    </p>
+    <p style="margin-top:8px; font-size:11px;">GSTIN: 21ARKPN8270G1ZP | MSME: UDYAM-OD-19-0133456 | Startup India: BHASKAR ID IN-0426-9439SC</p>
   </footer>
 
 </div>
 
 <script>
-const CONFIG = {
-  API_BASE: 'https://api.cyberdudebivash.in',
-  FALLBACK_API: 'https://cyberdudebivash-army-api.iambivash-bn.workers.dev',
-  PAGE_SIZE: 8
+// ============================================
+// CONFIGURATION
+// ============================================
+const API_BASE = 'https://api.cyberdudebivash.in';
+const FALLBACK_API = 'https://cyberdudebivash-army-api.iambivash-bn.workers.dev';
+const ITEMS_PER_PAGE = 12;
+
+let currentState = {
+  sourceFilter: '',
+  severityFilter: '',
+  searchQuery: '',
+  page: 0,
+  threats: [],
+  total: 0,
+  sources: [],
+  health: {}
 };
-let currentApiBase = CONFIG.API_BASE;
-let currentPage = 0;
-let totalThreats = 0;
 
-// Canvas Background
-(function initCanvas() {
-  const canvas = document.getElementById('bgCanvas');
-  const ctx = canvas.getContext('2d');
-  let particles = [];
-  let w, h;
-  function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
-  resize(); window.addEventListener('resize', resize);
-  for (let i = 0; i < 60; i++) {
-    particles.push({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, r: Math.random() * 1.5 + 0.5 });
-  }
-  let mouse = { x: -1000, y: -1000 };
-  document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-  function animate() {
-    ctx.clearRect(0, 0, w, h);
-    particles.forEach((p, i) => {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0) p.x = w; if (p.x > w) p.x = 0; if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
-      const dx = p.x - mouse.x, dy = p.y - mouse.y, dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 150) { p.x += dx / dist * 0.5; p.y += dy / dist * 0.5; }
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0, 240, 255, 0.4)'; ctx.fill();
-      for (let j = i + 1; j < particles.length; j++) {
-        const p2 = particles[j], d = Math.hypot(p.x - p2.x, p.y - p2.y);
-        if (d < 120) { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.strokeStyle = `rgba(0, 240, 255, ${0.08 * (1 - d / 120)})`; ctx.lineWidth = 0.5; ctx.stroke(); }
-      }
-    });
-    requestAnimationFrame(animate);
-  }
-  animate();
-})();
+let searchTimeout = null;
+let activeAPI = API_BASE;
 
-// Clock
-function updateClock() {
+// ============================================
+// DEBUG CONSOLE
+// ============================================
+function log(msg, type = 'info') {
+  const body = document.getElementById('debugBody');
+  const line = document.createElement('div');
+  line.className = `debug-line ${type}`;
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+  console.log(`[${type.toUpperCase()}] ${msg}`);
+}
+
+function toggleDebug() {
+  document.getElementById('debugConsole').classList.toggle('visible');
+}
+
+function toggleSourceHealth() {
+  const grid = document.getElementById('sourceHealthGrid');
+  grid.style.display = grid.style.display === 'none' ? 'grid' : 'none';
+}
+
+// ============================================
+// CLOCK
+// ============================================
+function updateClocks() {
   const now = new Date();
-  const ist = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false });
-  const utc = now.toLocaleTimeString('en-GB', { timeZone: 'UTC', hour12: false });
-  document.getElementById('clockTime').textContent = ist;
-  document.getElementById('clockDate').textContent = `IST ${ist} | UTC ${utc}`;
+  document.getElementById('clockUTC').textContent = now.toISOString().split('T')[1].split('.')[0] + ' UTC';
+  const ist = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+  document.getElementById('clockIST').textContent = ist.toISOString().split('T')[1].split('.')[0] + ' IST';
 }
-setInterval(updateClock, 1000); updateClock();
+setInterval(updateClocks, 1000);
+updateClocks();
 
-// API Client
-async function apiFetch(endpoint, opts = {}) {
-  const url = currentApiBase + endpoint;
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 15000);
+// ============================================
+// API FETCH WITH FALLBACK
+// ============================================
+async function apiFetch(endpoint, options = {}) {
+  const urls = [activeAPI, activeAPI === API_BASE ? FALLBACK_API : API_BASE];
+  let lastError = null;
+
+  for (const base of urls) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(`${base}${endpoint}`, { ...options, signal: controller.signal });
+      clearTimeout(timeout);
+
+      if (res.ok) {
+        activeAPI = base;
+        document.getElementById('connectionStatus').textContent = 'LIVE DATA';
+        return res;
+      }
+      lastError = `HTTP ${res.status}`;
+    } catch (e) {
+      lastError = e.message;
+    }
+  }
+
+  throw new Error(lastError || 'All API endpoints failed');
+}
+
+// ============================================
+// LOAD SUMMARY
+// ============================================
+async function loadSummary() {
   try {
-    const res = await fetch(url, { ...opts, signal: ctrl.signal, headers: { 'Accept': 'application/json', ...(opts.headers || {}) } });
-    clearTimeout(t);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return await res.json();
-  } catch (e) { clearTimeout(t); throw e; }
-}
-async function tryFetch(endpoint, opts = {}) {
-  try { return await apiFetch(endpoint, opts); }
-  catch (e) {
-    if (currentApiBase !== CONFIG.FALLBACK_API) { currentApiBase = CONFIG.FALLBACK_API; return await apiFetch(endpoint, opts); }
-    throw e;
+    log('Fetching summary...');
+    const res = await apiFetch('/api/v1/summary');
+    const data = await res.json();
+
+    animateValue('statTotal', data.total || 0);
+    animateValue('statCritical', data.critical || 0);
+    animateValue('statHigh', data.high || 0);
+    animateValue('statMedium', data.medium || 0);
+    animateValue('statSources', data.sourceCount || 0);
+
+    const lastSync = data.lastSync ? new Date(data.lastSync) : null;
+    document.getElementById('statLastSync').textContent = lastSync 
+      ? lastSync.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+      : 'Never';
+
+    renderSourceDistribution(data.sources || {});
+    log(`Summary loaded: ${data.total} threats from ${data.sourceCount} sources`, 'success');
+  } catch (e) {
+    log(`Summary error: ${e.message}`, 'error');
+    document.getElementById('statTotal').textContent = 'ERR';
   }
 }
 
-// Animated Counter
-function animateCounter(el, target, duration = 1200, decimals = 0) {
-  const start = performance.now();
-  const from = parseFloat(el.textContent) || 0;
-  function step(now) {
-    const progress = Math.min((now - start) / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    const val = from + (target - from) * eased;
-    el.textContent = decimals ? val.toFixed(decimals) : Math.round(val).toLocaleString();
-    if (progress < 1) requestAnimationFrame(step);
+// ============================================
+// LOAD SOURCE HEALTH
+// ============================================
+async function loadSourceHealth() {
+  try {
+    log('Fetching source health...');
+    const res = await apiFetch('/api/v1/health');
+    const data = await res.json();
+    currentState.health = data.sources || {};
+    currentState.sources = Object.values(data.sources || {}).map(s => ({
+      id: s.id || Object.keys(data.sources).find(k => data.sources[k] === s),
+      ...s
+    }));
+
+    renderSourceHealth(data.sources || {});
+    renderSourceFilters(data.sources || {});
+    log(`Health loaded: ${data.overall?.activeSources || 0} healthy sources`, 'success');
+  } catch (e) {
+    log(`Health error: ${e.message}`, 'error');
   }
-  requestAnimationFrame(step);
 }
 
-// Severity Chart
-function renderDonut(severity, total) {
-  const svg = document.getElementById('severityChart');
-  const colors = { CRITICAL: '#ff2a6d', HIGH: '#ff9f1c', MEDIUM: '#00f0ff', LOW: '#05ffa1', NONE: '#4a5568' };
-  const order = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'NONE'];
-  const r = 70, c = 2 * Math.PI * r;
-  let offset = 0;
-  svg.querySelectorAll('.seg').forEach(s => s.remove());
-  order.forEach(sev => {
-    const count = severity[sev] || 0;
-    if (count === 0) return;
-    const pct = count / total, dash = pct * c;
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', '90'); circle.setAttribute('cy', '90'); circle.setAttribute('r', r);
-    circle.setAttribute('fill', 'none'); circle.setAttribute('stroke', colors[sev]);
-    circle.setAttribute('stroke-width', '20'); circle.setAttribute('stroke-dasharray', `${dash} ${c - dash}`);
-    circle.setAttribute('stroke-dashoffset', -offset); circle.setAttribute('stroke-linecap', 'round');
-    circle.setAttribute('class', 'seg'); circle.style.filter = `drop-shadow(0 0 6px ${colors[sev]})`;
-    svg.appendChild(circle); offset += dash;
+// ============================================
+// LOAD THREATS
+// ============================================
+async function loadThreats() {
+  const grid = document.getElementById('threatGrid');
+  grid.innerHTML = '<div class="loading-skeleton"></div><div class="loading-skeleton"></div><div class="loading-skeleton"></div>';
+
+  try {
+    const params = new URLSearchParams();
+    params.set('limit', ITEMS_PER_PAGE);
+    params.set('offset', currentState.page * ITEMS_PER_PAGE);
+    if (currentState.sourceFilter) params.set('source', currentState.sourceFilter);
+    if (currentState.severityFilter) params.set('severity', currentState.severityFilter);
+    if (currentState.searchQuery) params.set('search', currentState.searchQuery);
+
+    log(`Fetching threats: ${params.toString()}`);
+    const res = await apiFetch(`/api/v1/threats?${params}`);
+    const data = await res.json();
+
+    currentState.threats = data.threats || [];
+    currentState.total = data.pagination?.total || 0;
+
+    renderThreats(currentState.threats);
+    renderPagination(data.pagination);
+    document.getElementById('feedCount').textContent = `${currentState.total} total | Page ${currentState.page + 1}`;
+    log(`Loaded ${currentState.threats.length} threats`, 'success');
+  } catch (e) {
+    log(`Threats error: ${e.message}`, 'error');
+    grid.innerHTML = `
+      <div class="error-state" style="grid-column:1/-1;">
+        <h3>⚠️ API CONNECTION FAILED</h3>
+        <p>${e.message}</p>
+        <button class="retry-btn" onclick="loadAll()">RETRY CONNECTION</button>
+      </div>`;
+  }
+}
+
+// ============================================
+// RENDER FUNCTIONS
+// ============================================
+function renderSourceDistribution(sourceCounts) {
+  const grid = document.getElementById('sourceDistGrid');
+  const entries = Object.entries(sourceCounts).filter(([_, count]) => count > 0);
+  if (entries.length === 0) {
+    grid.innerHTML = '<p style="color:var(--text-muted);font-size:12px;">No source data available</p>';
+    return;
+  }
+
+  const total = entries.reduce((sum, [_, count]) => sum + count, 0);
+  const sourceColors = {
+    nvd: '#3b82f6', cisa_kev: '#ef4444', github: '#8b5cf6',
+    circl: '#10b981', trident: '#f59e0b', osv: '#06b6d4',
+    threatfox: '#ec4899', urlhaus: '#f97316'
+  };
+
+  grid.innerHTML = entries.map(([source, count]) => {
+    const pct = ((count / total) * 100).toFixed(1);
+    const color = sourceColors[source] || '#00e5ff';
+    const name = source.replace('_', ' ').toUpperCase();
+    return `
+      <div class="source-dist-item">
+        <div style="width:10px;height:10px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color};"></div>
+        <div style="flex:1;">
+          <div class="source-dist-name">${name}</div>
+          <div class="source-dist-bar"><div class="source-dist-fill" style="width:${pct}%;background:${color};"></div></div>
+        </div>
+        <div class="source-dist-info">
+          <div style="font-weight:700;font-size:14px;">${count}</div>
+          <div class="source-dist-count">${pct}%</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderSourceHealth(sources) {
+  const grid = document.getElementById('sourceHealthGrid');
+  const entries = Object.entries(sources);
+
+  if (entries.length === 0) {
+    grid.innerHTML = '<p style="color:var(--text-muted);font-size:12px;">No health data</p>';
+    return;
+  }
+
+  grid.innerHTML = entries.map(([id, s]) => {
+    const statusClass = s.status === 'healthy' ? 'status-healthy' : s.status === 'degraded' ? 'status-degraded' : 'status-unknown';
+    const lastSync = s.lastSync ? new Date(s.lastSync).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }) : 'Never';
+    return `
+      <div class="source-health-card" style="border-left: 3px solid ${s.color || '#00e5ff'};">
+        <div class="source-health-header">
+          <div class="source-health-name">
+            <span style="width:8px;height:8px;border-radius:50%;background:${s.color || '#00e5ff'};display:inline-block;"></span>
+            ${s.name || id}
+          </div>
+          <div class="source-health-status ${statusClass}">${s.status}</div>
+        </div>
+        <div class="source-health-meta">
+          <span>📦 ${s.count || 0} threats</span>
+          <span>⏱️ ${s.responseTime || 0}ms</span>
+          <span>🔄 ${lastSync}</span>
+        </div>
+        ${s.error ? `<div style="margin-top:6px;font-size:10px;color:var(--accent-red);">⚠️ ${s.error}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function renderSourceFilters(sources) {
+  const container = document.getElementById('sourceFilters');
+  const sourceColors = {
+    nvd: '#3b82f6', cisa_kev: '#ef4444', github: '#8b5cf6',
+    circl: '#10b981', trident: '#f59e0b', osv: '#06b6d4'
+  };
+
+  const healthySources = Object.entries(sources)
+    .filter(([_, s]) => s.status === 'healthy' && s.count > 0)
+    .map(([id, s]) => ({ id, ...s }));
+
+  if (healthySources.length === 0) return;
+
+  const filterHTML = healthySources.map(s => {
+    const color = sourceColors[s.id] || '#00e5ff';
+    return `<button class="filter-tab source-tab" data-source="${s.id}" style="border-left-color:${color};" onclick="setSourceFilter('${s.id}')">${s.name}</button>`;
+  }).join('');
+
+  container.innerHTML = `<button class="filter-tab active" data-source="" onclick="setSourceFilter('')">ALL</button>` + filterHTML;
+}
+
+function renderThreats(threats) {
+  const grid = document.getElementById('threatGrid');
+  if (threats.length === 0) {
+    grid.innerHTML = '<div class="error-state" style="grid-column:1/-1;"><h3>No threats found</h3><p>Try adjusting filters or search query</p></div>';
+    return;
+  }
+
+  const sourceColors = {
+    nvd: '#3b82f6', cisa_kev: '#ef4444', github: '#8b5cf6',
+    circl: '#10b981', trident: '#f59e0b', osv: '#06b6d4'
+  };
+
+  grid.innerHTML = threats.map((t, i) => {
+    const sourceColor = sourceColors[t.source] || '#00e5ff';
+    const scorePct = Math.min((t.score / 10) * 100, 100);
+    const scoreColor = t.severity === 'CRITICAL' ? 'var(--accent-red)' : t.severity === 'HIGH' ? 'var(--accent-orange)' : 'var(--accent-cyan)';
+    const tags = t.tags || [];
+    const isKev = tags.includes('kev');
+    const isAi = tags.includes('ai') || tags.includes('ai-monitored');
+
+    return `
+      <div class="threat-card ${t.severity.toLowerCase()} animate-in" style="animation-delay:${i * 0.05}s;">
+        <div class="threat-header">
+          <div class="threat-id">${t.id}</div>
+          <div class="threat-badges">
+            <span class="badge badge-severity-${t.severity.toLowerCase()}">${t.severity}</span>
+            <span class="badge badge-source" style="border-color:${sourceColor};color:${sourceColor};">${t.source.replace('_', ' ').toUpperCase()}</span>
+            ${isKev ? '<span class="badge badge-kev">KEV</span>' : ''}
+            ${isAi ? '<span class="badge badge-ai">AI</span>' : ''}
+          </div>
+        </div>
+        <div class="threat-title">${t.title}</div>
+        <div class="threat-desc">${t.description}</div>
+        <div class="threat-meta">
+          <div class="threat-score">
+            <span>CVSS ${t.score.toFixed(1)}</span>
+            <div class="score-bar"><div class="score-fill" style="width:${scorePct}%;background:${scoreColor};"></div></div>
+          </div>
+          <span>${new Date(t.published).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderPagination(pagination) {
+  const container = document.getElementById('pagination');
+  if (!pagination || pagination.total <= ITEMS_PER_PAGE) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const totalPages = Math.ceil(pagination.total / ITEMS_PER_PAGE);
+  let html = `<button class="page-btn" onclick="changePage(-1)" ${currentState.page === 0 ? 'disabled' : ''}>← Prev</button>`;
+
+  for (let i = 0; i < totalPages && i < 8; i++) {
+    html += `<button class="page-btn ${i === currentState.page ? 'active' : ''}" onclick="goToPage(${i})">${i + 1}</button>`;
+  }
+
+  html += `<button class="page-btn" onclick="changePage(1)" ${!pagination.hasMore ? 'disabled' : ''}>Next →</button>`;
+  container.innerHTML = html;
+}
+
+// ============================================
+// FILTER HANDLERS
+// ============================================
+function setSourceFilter(source) {
+  currentState.sourceFilter = source;
+  currentState.page = 0;
+
+  document.querySelectorAll('#sourceFilters .filter-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.source === source);
   });
-  const legend = document.getElementById('chartLegend');
-  legend.innerHTML = order.filter(s => severity[s] > 0).map(s => `
-    <div class="legend-item"><div class="legend-dot" style="background:${colors[s]};box-shadow:0 0 8px ${colors[s]}"></div><span>${s} <strong>${severity[s]}</strong></span></div>
-  `).join('');
-  animateCounter(document.getElementById('donutTotal'), total, 1000);
-}
 
-// Renderers
-function renderStats(s) {
-  animateCounter(document.getElementById('statTotal'), s.total || 0);
-  animateCounter(document.getElementById('statCritical'), s.severity?.CRITICAL || 0);
-  animateCounter(document.getElementById('statAI'), s.aiThreats || 0);
-  animateCounter(document.getElementById('statKEV'), s.knownExploited || 0);
-  animateCounter(document.getElementById('statSources'), Object.keys(s.sources || {}).length);
-  animateCounter(document.getElementById('statScore'), s.averageScore || 0, 1200, 1);
-}
-function renderSources(data) {
-  const box = document.getElementById('sourcesList');
-  const sources = data.sources || [];
-  box.innerHTML = sources.map(src => {
-    const st = src.status || 'unknown';
-    const healthPct = st === 'healthy' ? 100 : (st === 'degraded' ? 60 : 20);
-    const stClass = st === 'healthy' ? 'healthy' : (st === 'degraded' ? 'degraded' : 'down');
-    const icon = src.name === 'NVD' ? '📡' : '🛡️';
-    const sync = src.lastSync ? new Date(src.lastSync).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' }) : 'Never';
-    return `<div class="source-row"><div class="source-icon">${icon}</div><div class="source-info"><div class="source-name">${src.fullName || src.name}</div><div class="source-status ${stClass}">● ${st.toUpperCase()} — Last sync: ${sync} IST</div><div class="health-bar"><div class="health-fill ${stClass}" style="width:${healthPct}%"></div></div></div></div>`;
-  }).join('');
-}
-function renderTimeline(summary) {
-  const box = document.getElementById('timeline');
-  const sync = summary.lastSync ? new Date(summary.lastSync) : null;
-  const items = [];
-  if (sync) {
-    items.push({ time: sync.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' }), text: `Ingestion complete — ${summary.total || 0} threats indexed` });
-    items.push({ time: new Date(sync.getTime() - 3600000).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' }), text: 'CISA KEV feed synchronized' });
-    items.push({ time: new Date(sync.getTime() - 7200000).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' }), text: 'NVD API polling initiated' });
-  } else { items.push({ time: '--:--', text: 'Waiting for first ingestion...' }); }
-  box.innerHTML = items.map(it => `<div class="timeline-item"><div class="timeline-time">${it.time}</div><div class="timeline-text">${it.text}</div></div>`).join('');
-}
-function renderThreats(data, meta) {
-  const list = document.getElementById('threatList');
-  totalThreats = meta.total || 0;
-  document.getElementById('feedMeta').textContent = `Showing ${data.length} of ${totalThreats.toLocaleString()} records`;
-  if (!data || !data.length) {
-    list.innerHTML = '<div class="glass" style="padding:40px;text-align:center;color:var(--text-secondary);">No threats found in database.</div>';
-    renderPagination(0, 0); return;
-  }
-  list.innerHTML = data.map((t, i) => {
-    const sev = (t.severity || 'MEDIUM').toUpperCase();
-    const date = t.published_at ? new Date(t.published_at).toLocaleDateString('en-IN') : 'Unknown';
-    const score = t.score ? t.score.toFixed(1) : 'N/A';
-    const badges = [];
-    badges.push(`<span class="badge badge-sev-${sev}">${sev}</span>`);
-    if (t.kev) badges.push('<span class="badge badge-kev">🔥 KEV</span>');
-    if ((t.tags || []).includes('ai-security')) badges.push('<span class="badge badge-ai">AI</span>');
-    const tags = (t.tags || []).slice(0, 4).map(tag => `<span class="tag-pill">${tag}</span>`).join('');
-    return `<div class="glass threat-card ${sev} glass-hover fade-in" style="animation-delay:${i * 0.05}s"><div class="threat-header"><span class="cve-id">${t.id || 'UNKNOWN'}</span><div class="badges">${badges.join('')}</div></div><div class="threat-title">${t.title || 'Untitled Vulnerability'}</div><div class="threat-desc">${t.description || 'No description available.'}</div><div class="threat-footer"><span>📅 ${date}</span><span class="score">⭐ ${score}</span><span>📡 ${t.source || 'Unknown'}</span>${t.due_date ? `<span class="due">⏰ Due: ${new Date(t.due_date).toLocaleDateString('en-IN')}</span>` : ''}</div><div class="tags-row">${tags}</div></div>`;
-  }).join('');
-  renderPagination(meta.total || 0, meta.limit || CONFIG.PAGE_SIZE);
-}
-function renderPagination(total, limit) {
-  const pages = Math.ceil(total / limit);
-  const box = document.getElementById('pagination');
-  if (pages <= 1) { box.innerHTML = ''; return; }
-  let html = `<button class="page-btn" ${currentPage === 0 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">←</button>`;
-  for (let i = 0; i < pages; i++) { html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i + 1}</button>`; }
-  html += `<button class="page-btn" ${currentPage >= pages - 1 ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">→</button>`;
-  box.innerHTML = html;
-}
-function changePage(p) {
-  currentPage = p;
   loadThreats();
-  document.querySelector('.threat-list').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-function showError(msg) {
-  document.getElementById('errorBox').innerHTML = `<div class="error-box"><strong>⚠️ CONNECTION FAILURE</strong><br><span style="font-size:0.85rem;opacity:0.8;">${msg}</span><br><button onclick="initDashboard()">🔄 RETRY CONNECTION</button></div>`;
-  document.getElementById('threatList').innerHTML = '';
-  document.getElementById('pagination').innerHTML = '';
-  document.getElementById('liveStatus').textContent = 'OFFLINE';
-  document.querySelector('.pulse-dot').style.background = 'var(--red)';
-  document.querySelector('.pulse-dot').style.boxShadow = '0 0 10px var(--red)';
-  document.querySelector('.status-pill').style.borderColor = 'rgba(255,42,109,0.2)';
-  document.querySelector('.status-pill').style.background = 'var(--red-dim)';
-  document.querySelector('.status-pill').style.color = 'var(--red)';
 }
 
-// Data Loading
-async function loadSummary() { const data = await tryFetch('/api/v1/summary'); renderStats(data); renderDonut(data.severity || {}, data.total || 0); renderTimeline(data); return data; }
-async function loadSources() { const data = await tryFetch('/api/v1/sources'); renderSources(data); return data; }
-async function loadThreats() { const offset = currentPage * CONFIG.PAGE_SIZE; const data = await tryFetch(`/api/v1/threats?limit=${CONFIG.PAGE_SIZE}&offset=${offset}`); renderThreats(data.data, data.meta); return data; }
+function setSeverityFilter(severity) {
+  currentState.severityFilter = severity;
+  currentState.page = 0;
 
-// Init
-async function initDashboard() {
-  document.getElementById('errorBox').innerHTML = '';
-  try { await Promise.all([loadSummary(), loadSources()]); await loadThreats(); }
-  catch (e) { showError(e.message + '<br>API: ' + currentApiBase); }
+  document.querySelectorAll('#severityFilters .filter-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.severity === severity);
+  });
+
+  loadThreats();
 }
-setInterval(() => { initDashboard(); }, 300000);
-initDashboard();
+
+function debounceSearch() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    currentState.searchQuery = document.getElementById('searchInput').value;
+    currentState.page = 0;
+    loadThreats();
+  }, 400);
+}
+
+function changePage(delta) {
+  currentState.page += delta;
+  if (currentState.page < 0) currentState.page = 0;
+  loadThreats();
+}
+
+function goToPage(page) {
+  currentState.page = page;
+  loadThreats();
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+function animateValue(id, end) {
+  const el = document.getElementById(id);
+  const start = parseInt(el.textContent) || 0;
+  if (start === end) return;
+
+  const duration = 1000;
+  const startTime = performance.now();
+
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.floor(start + (end - start) * ease);
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+// ============================================
+// PARTICLE BACKGROUND
+// ============================================
+const canvas = document.getElementById('particle-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+class Particle {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.vx = (Math.random() - 0.5) * 0.5;
+    this.vy = (Math.random() - 0.5) * 0.5;
+    this.radius = Math.random() * 2 + 1;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 229, 255, 0.3)';
+    ctx.fill();
+  }
+}
+
+for (let i = 0; i < 60; i++) particles.push(new Particle());
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => { p.update(); p.draw(); });
+
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 120) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(0, 229, 255, ${0.15 * (1 - dist / 120)})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// ============================================
+// INIT
+// ============================================
+async function loadAll() {
+  log('ARMY Dashboard v6.0 initializing...');
+  await Promise.all([loadSummary(), loadSourceHealth(), loadThreats()]);
+}
+
+loadAll();
+setInterval(loadAll, 300000); // Refresh every 5 minutes
 </script>
+
 </body>
 </html>
