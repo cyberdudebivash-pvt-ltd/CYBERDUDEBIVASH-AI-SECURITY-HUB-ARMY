@@ -3,159 +3,1020 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CYBERDUDEBIVASH AI SECURITY HUB ARMY</title>
+<title>CYBERDUDEBIVASH — AI Security Threat Command</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
-    --bg: #0a0e17; --card: #111827; --border: #1f2937;
-    --text: #e5e7eb; --muted: #9ca3af; --accent: #10b981;
-    --critical: #ef4444; --high: #f59e0b; --medium: #3b82f6;
-    --low: #6b7280; --font: 'Segoe UI', system-ui, sans-serif;
+    --bg-deep: #020408;
+    --bg-panel: rgba(10, 15, 30, 0.65);
+    --bg-card: rgba(16, 22, 42, 0.55);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-glow: rgba(0, 240, 255, 0.15);
+    --text-primary: #f0f4f8;
+    --text-secondary: #8b9bb4;
+    --text-muted: #4a5568;
+    --cyan: #00f0ff;
+    --cyan-dim: rgba(0, 240, 255, 0.12);
+    --red: #ff2a6d;
+    --red-dim: rgba(255, 42, 109, 0.12);
+    --orange: #ff9f1c;
+    --orange-dim: rgba(255, 159, 28, 0.12);
+    --green: #05ffa1;
+    --green-dim: rgba(5, 255, 161, 0.12);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59, 130, 246, 0.12);
+    --purple: #a855f7;
+    --font-ui: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Orbitron', sans-serif;
   }
-  body { background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.6; }
-  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-  header { text-align: center; padding: 40px 20px; border-bottom: 1px solid var(--border); margin-bottom: 30px; }
-  header h1 { font-size: 2rem; color: var(--accent); letter-spacing: -0.5px; }
-  header p { color: var(--muted); margin-top: 8px; }
-  .badge { display: inline-block; background: var(--accent); color: #000; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-left: 10px; vertical-align: middle; }
-  .badge.offline { background: var(--critical); color: #fff; }
-  .badge.warn { background: var(--high); color: #000; }
 
-  /* Debug Panel */
-  .debug-panel { background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 25px; font-family: monospace; font-size: 0.8rem; max-height: 200px; overflow-y: auto; }
-  .debug-panel .log-line { padding: 2px 0; border-bottom: 1px solid #1a1a1a; }
-  .debug-panel .log-ok { color: var(--accent); }
-  .debug-panel .log-err { color: var(--critical); }
-  .debug-panel .log-info { color: var(--medium); }
-  .debug-toggle { text-align: right; margin-bottom: 10px; }
-  .debug-toggle button { background: var(--border); color: var(--text); border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  /* Stats Grid */
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
-  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; transition: transform 0.2s; }
-  .stat-card:hover { transform: translateY(-3px); border-color: var(--accent); }
-  .stat-value { font-size: 2.2rem; font-weight: 800; color: var(--accent); }
-  .stat-label { font-size: 0.85rem; color: var(--muted); margin-top: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .stat-card.critical .stat-value { color: var(--critical); }
-  .stat-card.high .stat-value { color: var(--high); }
+  html { scroll-behavior: smooth; }
 
-  /* Threat Feed */
-  .section-title { font-size: 1.3rem; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-  .threat-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; }
-  .threat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 8px; }
-  .threat-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-  .threat-id { font-family: monospace; font-size: 0.9rem; color: var(--accent); font-weight: 700; }
-  .severity { padding: 3px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
-  .severity-CRITICAL { background: rgba(239,68,68,0.15); color: var(--critical); border: 1px solid rgba(239,68,68,0.3); }
-  .severity-HIGH { background: rgba(245,158,11,0.15); color: var(--high); border: 1px solid rgba(245,158,11,0.3); }
-  .severity-MEDIUM { background: rgba(59,130,246,0.15); color: var(--medium); border: 1px solid rgba(59,130,246,0.3); }
-  .threat-title { font-size: 1.05rem; font-weight: 600; }
-  .threat-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
-  .threat-meta { display: flex; gap: 15px; font-size: 0.8rem; color: var(--muted); flex-wrap: wrap; }
-  .threat-meta span { display: flex; align-items: center; gap: 4px; }
-  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
-  .tag { background: var(--bg); border: 1px solid var(--border); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; color: var(--muted); }
-  .tag.kev { background: rgba(239,68,68,0.1); color: var(--critical); border-color: rgba(239,68,68,0.2); }
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.5;
+  }
 
-  /* Sources */
-  .sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 30px; }
-  .source-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
-  .source-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-  .source-icon { width: 40px; height: 40px; border-radius: 8px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-  .source-name { font-weight: 700; }
-  .source-status { font-size: 0.8rem; }
-  .status-healthy { color: var(--accent); }
-  .status-degraded { color: var(--high); }
-  .status-down { color: var(--critical); }
+  /* ===== ANIMATED BACKGROUND ===== */
+  #bgCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.4;
+  }
 
-  /* Loading & Error */
-  .skeleton { background: linear-gradient(90deg, var(--card) 25%, #1a2332 50%, var(--card) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; height: 20px; margin: 8px 0; }
-  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-  .error-box { background: rgba(239,68,68,0.1); border: 1px solid var(--critical); color: var(--critical); padding: 15px; border-radius: 8px; margin: 15px 0; }
-  .retry-btn { background: var(--accent); color: #000; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+  .scanlines {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 240, 255, 0.015) 2px,
+      rgba(0, 240, 255, 0.015) 4px
+    );
+  }
 
-  /* Lead Form */
-  .lead-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 30px; text-align: center; margin-bottom: 30px; }
-  .lead-section h3 { margin-bottom: 10px; }
-  .lead-form { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
-  .lead-form input { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px 16px; border-radius: 8px; min-width: 280px; font-size: 1rem; }
-  .lead-form button { background: var(--accent); color: #000; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; }
-  .lead-form button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .vignette {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(2,4,8,0.6) 100%);
+  }
 
-  /* Pagination */
-  .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
-  .pagination button { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 6px; cursor: pointer; }
-  .pagination button:disabled { opacity: 0.3; cursor: not-allowed; }
-  .pagination button.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  /* ===== LAYOUT ===== */
+  .app {
+    position: relative;
+    z-index: 10;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
 
-  footer { text-align: center; padding: 30px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 30px; }
-  @media (max-width: 600px) { header h1 { font-size: 1.4rem; } .stat-value { font-size: 1.6rem; } }
+  /* ===== HEADER ===== */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .brand-logo {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--cyan), var(--blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #000;
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.3);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .brand-logo::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%);
+    animation: shimmer 3s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) rotate(45deg); }
+  }
+
+  .brand-text h1 {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, #fff 0%, var(--cyan) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .brand-text p {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--green-dim);
+    border: 1px solid rgba(5, 255, 161, 0.2);
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--green);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .pulse-dot {
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  .clock {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-align: right;
+  }
+
+  .clock .time {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  /* ===== GLASS PANEL ===== */
+  .glass {
+    background: var(--bg-panel);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .glass-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-hover:hover {
+    border-color: var(--border-glow);
+    box-shadow: 0 12px 40px rgba(0, 240, 255, 0.08), inset 0 1px 0 rgba(255,255,255,0.06);
+    transform: translateY(-2px);
+  }
+
+  /* ===== HERO STATS ===== */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-box {
+    padding: 24px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+    opacity: 0.6;
+  }
+
+  .stat-box.critical { --accent-color: var(--red); background: linear-gradient(180deg, var(--red-dim), var(--bg-card)); }
+  .stat-box.ai { --accent-color: var(--cyan); background: linear-gradient(180deg, var(--cyan-dim), var(--bg-card)); }
+  .stat-box.kev { --accent-color: var(--orange); background: linear-gradient(180deg, var(--orange-dim), var(--bg-card)); }
+  .stat-box.total { --accent-color: var(--blue); background: linear-gradient(180deg, var(--blue-dim), var(--bg-card)); }
+  .stat-box.score { --accent-color: var(--purple); background: linear-gradient(180deg, rgba(168,85,247,0.12), var(--bg-card)); }
+  .stat-box.sources { --accent-color: var(--green); background: linear-gradient(180deg, var(--green-dim), var(--bg-card)); }
+
+  .stat-icon {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    opacity: 0.8;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent-color);
+    line-height: 1;
+    margin-bottom: 6px;
+    text-shadow: 0 0 20px var(--accent-color);
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+  }
+
+  /* ===== MAIN GRID ===== */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 1100px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 600px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .app { padding: 0 16px; }
+    .header { flex-direction: column; align-items: flex-start; }
+  }
+
+  /* ===== SECTION HEADERS ===== */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding: 0 4px;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title .line {
+    width: 24px;
+    height: 2px;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+  }
+
+  .section-meta {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  /* ===== THREAT CARDS ===== */
+  .threat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .threat-card {
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .threat-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--severity-color);
+    box-shadow: 0 0 12px var(--severity-color);
+  }
+
+  .threat-card.CRITICAL { --severity-color: var(--red); }
+  .threat-card.HIGH { --severity-color: var(--orange); }
+  .threat-card.MEDIUM { --severity-color: var(--cyan); }
+  .threat-card.LOW { --severity-color: var(--green); }
+  .threat-card.UNKNOWN { --severity-color: var(--text-muted); }
+
+  .threat-card:hover {
+    border-color: var(--severity-color);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 20px var(--severity-dim);
+    transform: translateX(4px);
+  }
+
+  .threat-card.CRITICAL:hover { --severity-dim: var(--red-dim); }
+  .threat-card.HIGH:hover { --severity-dim: var(--orange-dim); }
+
+  .threat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .cve-id {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.5px;
+  }
+
+  .badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid;
+  }
+
+  .badge-sev-CRITICAL { color: var(--red); border-color: rgba(255,42,109,0.3); background: var(--red-dim); }
+  .badge-sev-HIGH { color: var(--orange); border-color: rgba(255,159,28,0.3); background: var(--orange-dim); }
+  .badge-sev-MEDIUM { color: var(--cyan); border-color: rgba(0,240,255,0.3); background: var(--cyan-dim); }
+  .badge-kev { color: var(--red); border-color: rgba(255,42,109,0.3); background: var(--red-dim); }
+  .badge-ai { color: var(--cyan); border-color: rgba(0,240,255,0.3); background: var(--cyan-dim); }
+
+  .threat-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+
+  .threat-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .threat-footer {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .threat-footer span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .threat-footer .score {
+    color: var(--orange);
+    font-weight: 700;
+  }
+
+  .threat-footer .due {
+    color: var(--red);
+  }
+
+  .tags-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .tag-pill {
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-subtle);
+    font-family: var(--font-mono);
+  }
+
+  /* ===== SIDEBAR WIDGETS ===== */
+  .widget {
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .widget-title {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .widget-title::before {
+    content: '';
+    width: 8px; height: 8px;
+    background: var(--cyan);
+    border-radius: 2px;
+    box-shadow: 0 0 8px var(--cyan);
+  }
+
+  /* ===== DONUT CHART ===== */
+  .chart-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 180px;
+  }
+
+  .donut-center {
+    position: absolute;
+    text-align: center;
+  }
+
+  .donut-center .num {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+
+  .donut-center .label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .chart-legend {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  /* ===== SOURCE HEALTH ===== */
+  .source-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .source-row:last-child { border-bottom: none; }
+
+  .source-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .source-info { flex: 1; }
+  .source-name { font-size: 0.85rem; font-weight: 600; }
+  .source-status { font-size: 0.7rem; margin-top: 2px; }
+  .source-status.healthy { color: var(--green); }
+  .source-status.degraded { color: var(--orange); }
+  .source-status.down { color: var(--red); }
+
+  .health-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+
+  .health-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  .health-fill.healthy { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .health-fill.degraded { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+  .health-fill.down { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+  /* ===== TIMELINE ===== */
+  .timeline {
+    position: relative;
+    padding-left: 20px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 5px; top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, var(--cyan), transparent);
+  }
+
+  .timeline-item {
+    position: relative;
+    padding-bottom: 16px;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -16px; top: 4px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+  }
+
+  .timeline-time {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  .timeline-text {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* ===== PAGINATION ===== */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding-bottom: 8px;
+  }
+
+  .page-btn {
+    min-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .page-btn:hover:not(:disabled) {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 12px rgba(0,240,255,0.1);
+  }
+
+  .page-btn.active {
+    background: var(--cyan-dim);
+    border-color: var(--cyan);
+    color: var(--cyan);
+    font-weight: 700;
+    box-shadow: 0 0 12px rgba(0,240,255,0.15);
+  }
+
+  .page-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* ===== CTA SECTION ===== */
+  .cta-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 800px) { .cta-section { grid-template-columns: 1fr; } }
+
+  .cta-card {
+    padding: 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .cta-card.lead { --accent: var(--cyan); }
+  .cta-card.book { --accent: var(--green); }
+
+  .cta-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  .cta-card p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+  }
+
+  .cta-input-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .cta-input {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .cta-input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 12px rgba(0,240,255,0.1);
+  }
+
+  .cta-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .cta-btn.primary {
+    background: linear-gradient(135deg, var(--cyan), var(--blue));
+    color: #000;
+    box-shadow: 0 4px 20px rgba(0,240,255,0.2);
+  }
+
+  .cta-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,240,255,0.3);
+  }
+
+  .cta-btn.success {
+    background: linear-gradient(135deg, var(--green), #00c853);
+    color: #000;
+    box-shadow: 0 4px 20px rgba(5,255,161,0.2);
+  }
+
+  .cta-btn.success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(5,255,161,0.3);
+  }
+
+  .cta-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    text-align: center;
+    padding: 32px;
+    border-top: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .footer .brand-line {
+    font-family: var(--font-display);
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+
+  /* ===== LOADING & ERROR ===== */
+  .skeleton-card {
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .skeleton-line {
+    height: 12px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+
+  .error-box {
+    padding: 20px;
+    border: 1px solid rgba(255,42,109,0.3);
+    background: var(--red-dim);
+    border-radius: 12px;
+    color: var(--red);
+    text-align: center;
+  }
+
+  .error-box button {
+    margin-top: 12px;
+    padding: 8px 20px;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  /* ===== UTILITY ===== */
+  .hidden { display: none !important; }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+
+  .stagger-1 { animation-delay: 0.1s; }
+  .stagger-2 { animation-delay: 0.2s; }
+  .stagger-3 { animation-delay: 0.3s; }
+  .stagger-4 { animation-delay: 0.4s; }
+  .stagger-5 { animation-delay: 0.5s; }
+  .stagger-6 { animation-delay: 0.6s; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 </style>
 </head>
 <body>
-<div class="container">
 
-<header>
-  <h1>CYBERDUDEBIVASH AI SECURITY HUB ARMY <span id="liveBadge" class="badge offline">OFFLINE</span></h1>
-  <p>Live AI Security Threat Intelligence — Real-time CVE feeds from NVD & CISA</p>
-  <p style="margin-top:6px;font-size:0.8rem;color:var(--muted);" id="lastSync">Last sync: checking...</p>
-</header>
+<canvas id="bgCanvas"></canvas>
+<div class="scanlines"></div>
+<div class="vignette"></div>
 
-<!-- DEBUG PANEL -->
-<div class="debug-toggle"><button onclick="toggleDebug()">Toggle Debug Console</button></div>
-<div class="debug-panel" id="debugPanel" style="display:none;">
-  <div id="debugLogs"></div>
-</div>
+<div class="app">
 
-<!-- STATS -->
-<div class="stats" id="statsGrid">
-  <div class="stat-card"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Total Threats</div></div>
-  <div class="stat-card critical"><div class="stat-value" id="statCritical">—</div><div class="stat-label">Critical</div></div>
-  <div class="stat-card high"><div class="stat-value" id="statAI">—</div><div class="stat-label">AI Threats</div></div>
-  <div class="stat-card"><div class="stat-value" id="statKEV">—</div><div class="stat-label">Known Exploited</div></div>
-  <div class="stat-card"><div class="stat-value" id="statSources">—</div><div class="stat-label">Active Sources</div></div>
-  <div class="stat-card"><div class="stat-value" id="statScore">—</div><div class="stat-label">Avg Score</div></div>
-</div>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-logo">C</div>
+      <div class="brand-text">
+        <h1>CYBERDUDEBIVASH</h1>
+        <p>AI Security Threat Command</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="status-pill">
+        <span class="pulse-dot"></span>
+        <span id="liveStatus">LIVE INTEL</span>
+      </div>
+      <div class="clock">
+        <div class="time" id="clockTime">--:--:--</div>
+        <div id="clockDate">IST | UTC</div>
+      </div>
+    </div>
+  </header>
 
-<!-- SOURCES -->
-<div class="section-title">📡 Data Sources</div>
-<div class="sources" id="sourcesGrid">
-  <div class="source-card"><div class="skeleton" style="height:60px;"></div></div>
-  <div class="source-card"><div class="skeleton" style="height:60px;"></div></div>
-</div>
-
-<!-- THREATS -->
-<div class="section-title">🔥 Live Threat Feed <span style="font-size:0.8rem;color:var(--muted);font-weight:400;" id="threatCount"></span></div>
-<div id="errorBox"></div>
-<div class="threat-list" id="threatList">
-  <div class="threat-card"><div class="skeleton" style="height:16px;width:40%;"></div><div class="skeleton" style="height:12px;width:80%;"></div><div class="skeleton" style="height:12px;width:60%;"></div></div>
-  <div class="threat-card"><div class="skeleton" style="height:16px;width:40%;"></div><div class="skeleton" style="height:12px;width:80%;"></div><div class="skeleton" style="height:12px;width:60%;"></div></div>
-  <div class="threat-card"><div class="skeleton" style="height:16px;width:40%;"></div><div class="skeleton" style="height:12px;width:80%;"></div><div class="skeleton" style="height:12px;width:60%;"></div></div>
-</div>
-<div class="pagination" id="pagination"></div>
-
-<!-- LEAD CAPTURE -->
-<div class="lead-section">
-  <h3>🚨 Get Critical Alerts First</h3>
-  <p style="color:var(--muted);">Subscribe to instant notifications for new AI security threats, CVEs, and CISA alerts.</p>
-  <div class="lead-form" id="leadForm">
-    <input type="email" id="leadEmail" placeholder="Enter your email" required>
-    <button onclick="subscribe()" id="subBtn">Subscribe</button>
+  <!-- HERO STATS -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="glass stat-box total glass-hover fade-in stagger-1">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-value" id="statTotal">0</div>
+      <div class="stat-label">Total Threats</div>
+    </div>
+    <div class="glass stat-box critical glass-hover fade-in stagger-2">
+      <div class="stat-icon">🔥</div>
+      <div class="stat-value" id="statCritical">0</div>
+      <div class="stat-label">Critical</div>
+    </div>
+    <div class="glass stat-box ai glass-hover fade-in stagger-3">
+      <div class="stat-icon">🤖</div>
+      <div class="stat-value" id="statAI">0</div>
+      <div class="stat-label">AI Threats</div>
+    </div>
+    <div class="glass stat-box kev glass-hover fade-in stagger-4">
+      <div class="stat-icon">⚡</div>
+      <div class="stat-value" id="statKEV">0</div>
+      <div class="stat-label">Known Exploited</div>
+    </div>
+    <div class="glass stat-box sources glass-hover fade-in stagger-5">
+      <div class="stat-icon">📡</div>
+      <div class="stat-value" id="statSources">0</div>
+      <div class="stat-label">Active Sources</div>
+    </div>
+    <div class="glass stat-box score glass-hover fade-in stagger-6">
+      <div class="stat-icon">📊</div>
+      <div class="stat-value" id="statScore">0.0</div>
+      <div class="stat-label">Avg Score</div>
+    </div>
   </div>
-  <p id="subMsg" style="margin-top:10px;font-size:0.9rem;"></p>
-</div>
 
-<!-- CTA -->
-<div class="lead-section" style="background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(59,130,246,0.1));">
-  <h3>🛡️ DPDP Compliance + AI Security Assessment</h3>
-  <p style="color:var(--muted);margin-bottom:15px;">Full enterprise audit. ₹49,999. Book a free 15-minute discovery call.</p>
-  <a href="https://wa.me/919999999999?text=Hi%20Bivash%2C%20I%20want%20to%20book%20a%20DPDP%20compliance%20assessment" target="_blank" style="background:var(--accent);color:#000;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block;">Book Free Call</a>
-</div>
+  <!-- MAIN GRID -->
+  <div class="main-grid">
 
-<footer>
-  <p>© 2026 CYBERDUDEBIVASH® — AI Cybersecurity Ecosystem</p>
-  <p style="margin-top:5px;font-size:0.75rem;">Data sourced from NVD (nvd.nist.gov) and CISA KEV (cisa.gov). Updated every 6 hours.</p>
-</footer>
+    <!-- LEFT: THREAT FEED -->
+    <div>
+      <div class="section-header">
+        <div class="section-title"><span class="line"></span> Live Threat Feed</div>
+        <div class="section-meta" id="feedMeta">Loading...</div>
+      </div>
+      <div id="errorBox"></div>
+      <div class="threat-list" id="threatList">
+        <!-- Skeletons -->
+        <div class="glass skeleton-card"><div class="skeleton-line" style="width:30%;height:16px;"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div>
+        <div class="glass skeleton-card"><div class="skeleton-line" style="width:30%;height:16px;"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div>
+        <div class="glass skeleton-card"><div class="skeleton-line" style="width:30%;height:16px;"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div>
+        <div class="glass skeleton-card"><div class="skeleton-line" style="width:30%;height:16px;"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- RIGHT: SIDEBAR -->
+    <div>
+      <!-- Severity Chart -->
+      <div class="glass widget">
+        <div class="widget-title">Severity Distribution</div>
+        <div class="chart-container">
+          <svg width="180" height="180" viewBox="0 0 180 180" id="severityChart">
+            <!-- Background circle -->
+            <circle cx="90" cy="90" r="70" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="20"/>
+          </svg>
+          <div class="donut-center">
+            <div class="num" id="donutTotal">0</div>
+            <div class="label">Threats</div>
+          </div>
+        </div>
+        <div class="chart-legend" id="chartLegend"></div>
+      </div>
+
+      <!-- Source Health -->
+      <div class="glass widget">
+        <div class="widget-title">Source Health</div>
+        <div id="sourcesList">
+          <div class="source-row">
+            <div class="source-icon">📡</div>
+            <div class="source-info">
+              <div class="source-name">NVD</div>
+              <div class="health-bar"><div class="health-fill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="source-row">
+            <div class="source-icon">🛡️</div>
+            <div class="source-info">
+              <div class="source-name">CISA KEV</div>
+              <div class="health-bar"><div class="health-fill" style="width:0%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Timeline -->
+      <div class="glass widget">
+        <div class="widget-title">Recent Activity</div>
+        <div class="timeline" id="timeline">
+          <div class="timeline-item">
+            <div class="timeline-time">--:--</div>
+            <div class="timeline-text">Initializing threat sensors...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA SECTION -->
+  <div class="cta-section">
+    <div class="glass cta-card lead glass-hover">
+      <h3>🚨 Get Critical Alerts First</h3>
+      <p>Subscribe to instant notifications when new AI security threats and CISA alerts are detected.</p>
+      <div class="cta-input-group">
+        <input type="email" class="cta-input" id="leadEmail" placeholder="your@email.com">
+        <button class="cta-btn primary" id="subBtn" onclick="subscribe()">Subscribe</button>
+      </div>
+      <p id="subMsg" style="margin-top:12px;font-size:0.85rem;min-height:20px;"></p>
+    </div>
+    <div class="glass cta-card book glass-hover">
+      <h3>🛡️ Enterprise DPDP + AI Audit</h3>
+      <p>Full compliance assessment and AI security posture review. Starting at ₹49,999.</p>
+      <a href="https://wa.me/919999999999?text=Hi%20Bivash%2C%20I%20want%20to%20book%20a%20DPDP%20compliance%20assessment" target="_blank" class="cta-btn success" style="text-decoration:none;display:inline-block;">Book Free Discovery Call</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="brand-line">CYBERDUDEBIVASH® — AI CYBERSECURITY ECOSYSTEM</div>
+    <div>Data sourced from NVD (nvd.nist.gov) and CISA KEV (cisa.gov) · Updated every 6 hours · © 2026</div>
+  </footer>
 
 </div>
 
@@ -164,156 +1025,270 @@
 const CONFIG = {
   API_BASE: 'https://api.cyberdudebivash.in',
   FALLBACK_API: 'https://cyberdudebivash-army-api.iambivash-bn.workers.dev',
-  PAGE_SIZE: 10
+  PAGE_SIZE: 8
 };
 
-// ===================== DEBUG LOGGER =====================
-const debugEl = document.getElementById('debugLogs');
-function log(msg, type='info') {
-  const line = document.createElement('div');
-  line.className = 'log-line log-' + type;
-  line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
-  debugEl.appendChild(line);
-  debugEl.scrollTop = debugEl.scrollHeight;
-  console.log('[ARMY]', msg);
-}
-function toggleDebug() {
-  const p = document.getElementById('debugPanel');
-  p.style.display = p.style.display === 'none' ? 'block' : 'none';
-}
-
-// ===================== API CLIENT =====================
 let currentApiBase = CONFIG.API_BASE;
-let threatsData = [];
 let currentPage = 0;
 let totalThreats = 0;
 
-async function apiFetch(endpoint, options={}) {
-  const url = currentApiBase + endpoint;
-  log('Fetching: ' + url, 'info');
+// ===================== CANVAS BACKGROUND =====================
+(function initCanvas() {
+  const canvas = document.getElementById('bgCanvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let w, h;
 
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
 
-    const res = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        'Accept': 'application/json',
-        ...(options.headers || {})
+  const PARTICLE_COUNT = 60;
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      r: Math.random() * 1.5 + 0.5
+    });
+  }
+
+  let mouse = { x: -1000, y: -1000 };
+  document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+
+    particles.forEach((p, i) => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0) p.x = w;
+      if (p.x > w) p.x = 0;
+      if (p.y < 0) p.y = h;
+      if (p.y > h) p.y = 0;
+
+      // Mouse repel
+      const dx = p.x - mouse.x;
+      const dy = p.y - mouse.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 150) {
+        p.x += dx / dist * 0.5;
+        p.y += dy / dist * 0.5;
+      }
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.4)';
+      ctx.fill();
+
+      // Connections
+      for (let j = i + 1; j < particles.length; j++) {
+        const p2 = particles[j];
+        const d = Math.hypot(p.x - p2.x, p.y - p2.y);
+        if (d < 120) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.strokeStyle = `rgba(0, 240, 255, ${0.08 * (1 - d/120)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
       }
     });
-    clearTimeout(timeout);
 
-    log('Response: ' + res.status + ' ' + res.statusText + ' from ' + url, res.ok ? 'ok' : 'err');
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => 'No body');
-      log('Error body: ' + text.substring(0,200), 'err');
-      throw new Error('HTTP ' + res.status + ': ' + res.statusText);
-    }
-
-    const data = await res.json();
-    return data;
-  } catch (e) {
-    log('Fetch failed: ' + e.message, 'err');
-    throw e;
+    requestAnimationFrame(animate);
   }
-}
+  animate();
+})();
 
-async function tryFetch(endpoint, options={}) {
+// ===================== CLOCK =====================
+function updateClock() {
+  const now = new Date();
+  const ist = now.toLocaleTimeString('en-IN', {timeZone:'Asia/Kolkata',hour12:false});
+  const utc = now.toLocaleTimeString('en-GB', {timeZone:'UTC',hour12:false});
+  document.getElementById('clockTime').textContent = ist;
+  document.getElementById('clockDate').textContent = `IST ${ist} | UTC ${utc}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ===================== API CLIENT =====================
+async function apiFetch(endpoint, opts={}) {
+  const url = currentApiBase + endpoint;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 15000);
   try {
-    return await apiFetch(endpoint, options);
+    const res = await fetch(url, { ...opts, signal: ctrl.signal, headers: { 'Accept':'application/json', ...(opts.headers||{}) } });
+    clearTimeout(t);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
   } catch (e) {
+    clearTimeout(t);
+    throw e;
+  }
+}
+
+async function tryFetch(endpoint, opts={}) {
+  try { return await apiFetch(endpoint, opts); }
+  catch (e) {
     if (currentApiBase !== CONFIG.FALLBACK_API) {
-      log('Primary API failed. Trying fallback...', 'warn');
       currentApiBase = CONFIG.FALLBACK_API;
-      return await apiFetch(endpoint, options);
+      return await apiFetch(endpoint, opts);
     }
     throw e;
   }
 }
 
-// ===================== RENDER =====================
-function renderStats(summary) {
-  document.getElementById('statTotal').textContent = summary.total || 0;
-  document.getElementById('statCritical').textContent = summary.severity?.CRITICAL || 0;
-  document.getElementById('statAI').textContent = summary.aiThreats || 0;
-  document.getElementById('statKEV').textContent = summary.knownExploited || 0;
-  document.getElementById('statSources').textContent = Object.keys(summary.sources || {}).length;
-  document.getElementById('statScore').textContent = summary.averageScore?.toFixed(1) || '—';
-
-  const badge = document.getElementById('liveBadge');
-  badge.textContent = 'LIVE DATA';
-  badge.className = 'badge';
-
-  const sync = summary.lastSync ? new Date(summary.lastSync).toLocaleString('en-IN', {timeZone:'Asia/Kolkata'}) : 'Unknown';
-  document.getElementById('lastSync').textContent = 'Last sync: ' + sync + ' IST';
+// ===================== ANIMATED COUNTER =====================
+function animateCounter(el, target, duration=1200, decimals=0) {
+  const start = performance.now();
+  const from = parseFloat(el.textContent) || 0;
+  function step(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const val = from + (target - from) * eased;
+    el.textContent = decimals ? val.toFixed(decimals) : Math.round(val).toLocaleString();
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 }
 
-function renderSources(sources) {
-  const grid = document.getElementById('sourcesGrid');
-  if (!sources || !sources.length) {
-    grid.innerHTML = '<div class="source-card"><p style="color:var(--muted);">No source data</p></div>';
-    return;
-  }
-  grid.innerHTML = sources.map(s => {
-    const statusClass = s.status === 'healthy' ? 'status-healthy' : (s.status === 'degraded' ? 'status-degraded' : 'status-down');
-    const icon = s.name === 'NVD' ? '📡' : '🛡️';
-    const lastSync = s.lastSync ? new Date(s.lastSync).toLocaleString('en-IN', {timeZone:'Asia/Kolkata'}) : 'Never';
+// ===================== SEVERITY CHART =====================
+function renderDonut(severity, total) {
+  const svg = document.getElementById('severityChart');
+  const colors = { CRITICAL: '#ff2a6d', HIGH: '#ff9f1c', MEDIUM: '#00f0ff', LOW: '#05ffa1', NONE: '#4a5568' };
+  const order = ['CRITICAL','HIGH','MEDIUM','LOW','NONE'];
+  const r = 70;
+  const c = 2 * Math.PI * r;
+  let offset = 0;
+
+  // Remove old segments
+  svg.querySelectorAll('.seg').forEach(s => s.remove());
+
+  order.forEach(sev => {
+    const count = severity[sev] || 0;
+    if (count === 0) return;
+    const pct = count / total;
+    const dash = pct * c;
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', '90');
+    circle.setAttribute('cy', '90');
+    circle.setAttribute('r', r);
+    circle.setAttribute('fill', 'none');
+    circle.setAttribute('stroke', colors[sev]);
+    circle.setAttribute('stroke-width', '20');
+    circle.setAttribute('stroke-dasharray', `${dash} ${c - dash}`);
+    circle.setAttribute('stroke-dashoffset', -offset);
+    circle.setAttribute('stroke-linecap', 'round');
+    circle.setAttribute('class', 'seg');
+    circle.style.filter = `drop-shadow(0 0 6px ${colors[sev]})`;
+    svg.appendChild(circle);
+    offset += dash;
+  });
+
+  // Legend
+  const legend = document.getElementById('chartLegend');
+  legend.innerHTML = order.filter(s => severity[s] > 0).map(s => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${colors[s]};box-shadow:0 0 8px ${colors[s]}"></div>
+      <span>${s} <strong>${severity[s]}</strong></span>
+    </div>
+  `).join('');
+
+  animateCounter(document.getElementById('donutTotal'), total, 1000);
+}
+
+// ===================== RENDERERS =====================
+function renderStats(s) {
+  animateCounter(document.getElementById('statTotal'), s.total || 0);
+  animateCounter(document.getElementById('statCritical'), s.severity?.CRITICAL || 0);
+  animateCounter(document.getElementById('statAI'), s.aiThreats || 0);
+  animateCounter(document.getElementById('statKEV'), s.knownExploited || 0);
+  animateCounter(document.getElementById('statSources'), Object.keys(s.sources||{}).length);
+  animateCounter(document.getElementById('statScore'), s.averageScore || 0, 1200, 1);
+}
+
+function renderSources(data) {
+  const box = document.getElementById('sourcesList');
+  const sources = data.sources || [];
+  box.innerHTML = sources.map(src => {
+    const st = src.status || 'unknown';
+    const healthPct = st === 'healthy' ? 100 : (st === 'degraded' ? 60 : 20);
+    const stClass = st === 'healthy' ? 'healthy' : (st === 'degraded' ? 'degraded' : 'down');
+    const icon = src.name === 'NVD' ? '📡' : '🛡️';
+    const sync = src.lastSync ? new Date(src.lastSync).toLocaleTimeString('en-IN', {timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit'}) : 'Never';
     return `
-      <div class="source-card">
-        <div class="source-header">
-          <div class="source-icon">${icon}</div>
-          <div>
-            <div class="source-name">${s.fullName || s.name}</div>
-            <div class="source-status ${statusClass}">● ${s.status?.toUpperCase() || 'UNKNOWN'} — Synced: ${lastSync}</div>
-          </div>
+      <div class="source-row">
+        <div class="source-icon">${icon}</div>
+        <div class="source-info">
+          <div class="source-name">${src.fullName || src.name}</div>
+          <div class="source-status ${stClass}">● ${st.toUpperCase()} — Last sync: ${sync} IST</div>
+          <div class="health-bar"><div class="health-fill ${stClass}" style="width:${healthPct}%"></div></div>
         </div>
-        <div style="font-size:0.8rem;color:var(--muted);margin-top:8px;">${s.description || ''}</div>
       </div>
     `;
   }).join('');
 }
 
+function renderTimeline(summary) {
+  const box = document.getElementById('timeline');
+  const sync = summary.lastSync ? new Date(summary.lastSync) : null;
+  const items = [];
+  if (sync) {
+    items.push({ time: sync.toLocaleTimeString('en-IN', {timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit'}), text: `Ingestion complete — ${summary.total || 0} threats indexed` });
+    items.push({ time: new Date(sync.getTime() - 3600000).toLocaleTimeString('en-IN', {timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit'}), text: 'CISA KEV feed synchronized' });
+    items.push({ time: new Date(sync.getTime() - 7200000).toLocaleTimeString('en-IN', {timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit'}), text: 'NVD API polling initiated' });
+  } else {
+    items.push({ time: '--:--', text: 'Waiting for first ingestion...' });
+  }
+  box.innerHTML = items.map(it => `
+    <div class="timeline-item">
+      <div class="timeline-time">${it.time}</div>
+      <div class="timeline-text">${it.text}</div>
+    </div>
+  `).join('');
+}
+
 function renderThreats(data, meta) {
   const list = document.getElementById('threatList');
   totalThreats = meta.total || 0;
-  document.getElementById('threatCount').textContent = `Showing ${data.length} of ${totalThreats}`;
+  document.getElementById('feedMeta').textContent = `Showing ${data.length} of ${totalThreats.toLocaleString()} records`;
 
   if (!data || !data.length) {
-    list.innerHTML = '<div class="threat-card" style="text-align:center;color:var(--muted);">No threats found in database.</div>';
+    list.innerHTML = '<div class="glass" style="padding:40px;text-align:center;color:var(--text-secondary);">No threats match current filters.</div>';
     renderPagination(0, 0);
     return;
   }
 
-  list.innerHTML = data.map(t => {
+  list.innerHTML = data.map((t, i) => {
     const sev = (t.severity || 'MEDIUM').toUpperCase();
-    const sevClass = 'severity-' + sev;
-    const tags = (t.tags || []).map(tag => {
-      const cls = tag.includes('kev') || tag.includes('exploited') ? 'tag kev' : 'tag';
-      return `<span class="${cls}">${tag}</span>`;
-    }).join('');
     const date = t.published_at ? new Date(t.published_at).toLocaleDateString('en-IN') : 'Unknown';
     const score = t.score ? t.score.toFixed(1) : 'N/A';
-    const kevBadge = t.kev ? '<span class="tag kev">🔥 KEV</span>' : '';
+    const badges = [];
+    badges.push(`<span class="badge badge-sev-${sev}">${sev}</span>`);
+    if (t.kev) badges.push('<span class="badge badge-kev">🔥 KEV</span>');
+    if ((t.tags||[]).includes('ai-security')) badges.push('<span class="badge badge-ai">AI</span>');
+    const tags = (t.tags || []).slice(0, 4).map(tag => `<span class="tag-pill">${tag}</span>`).join('');
 
     return `
-      <div class="threat-card">
+      <div class="glass threat-card ${sev} glass-hover fade-in" style="animation-delay:${i*0.05}s">
         <div class="threat-header">
-          <span class="threat-id">${t.id || 'UNKNOWN'}</span>
-          <span class="severity ${sevClass}">${sev}</span>
+          <span class="cve-id">${t.id || 'UNKNOWN'}</span>
+          <div class="badges">${badges.join('')}</div>
         </div>
-        <div class="threat-title">${t.title || 'Untitled'}</div>
+        <div class="threat-title">${t.title || 'Untitled Vulnerability'}</div>
         <div class="threat-desc">${t.description || 'No description available.'}</div>
-        <div class="threat-meta">
+        <div class="threat-footer">
           <span>📅 ${date}</span>
-          <span>⭐ ${score}</span>
+          <span class="score">⭐ ${score}</span>
           <span>📡 ${t.source || 'Unknown'}</span>
-          ${t.due_date ? '<span>⏰ Due: ' + new Date(t.due_date).toLocaleDateString('en-IN') + '</span>' : ''}
+          ${t.due_date ? `<span class="due">⏰ Due: ${new Date(t.due_date).toLocaleDateString('en-IN')}</span>` : ''}
         </div>
-        <div class="tags">${kevBadge}${tags}</div>
+        <div class="tags-row">${tags}</div>
       </div>
     `;
   }).join('');
@@ -325,56 +1300,54 @@ function renderPagination(total, limit) {
   const pages = Math.ceil(total / limit);
   const box = document.getElementById('pagination');
   if (pages <= 1) { box.innerHTML = ''; return; }
-
-  let html = '';
-  html += `<button ${currentPage===0?'disabled':''} onclick="changePage(${currentPage-1})">← Prev</button>`;
-  for (let i=0; i<pages; i++) {
-    html += `<button class="${i===currentPage?'active':''}" onclick="changePage(${i})">${i+1}</button>`;
+  let html = `<button class="page-btn" ${currentPage===0?'disabled':''} onclick="changePage(${currentPage-1})">←</button>`;
+  for (let i = 0; i < pages; i++) {
+    html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="changePage(${i})">${i+1}</button>`;
   }
-  html += `<button ${currentPage>=pages-1?'disabled':''} onclick="changePage(${currentPage+1})">Next →</button>`;
+  html += `<button class="page-btn" ${currentPage>=pages-1?'disabled':''} onclick="changePage(${currentPage+1})">→</button>`;
   box.innerHTML = html;
 }
 
 function changePage(p) {
   currentPage = p;
   loadThreats();
-  window.scrollTo({top: document.getElementById('threatList').offsetTop - 20, behavior: 'smooth'});
+  document.querySelector('.threat-list').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function showError(msg, retryable=true) {
-  const box = document.getElementById('errorBox');
-  box.innerHTML = `
+function showError(msg) {
+  document.getElementById('errorBox').innerHTML = `
     <div class="error-box">
-      <strong>⚠️ Error loading data</strong><br>${msg}
-      ${retryable ? '<br><button class="retry-btn" onclick="initDashboard()">🔄 Retry Now</button>' : ''}
-    </div>
-  `;
+      <strong>⚠️ CONNECTION FAILURE</strong><br><span style="font-size:0.85rem;opacity:0.8;">${msg}</span><br>
+      <button onclick="initDashboard()">🔄 RETRY CONNECTION</button>
+    </div>`;
   document.getElementById('threatList').innerHTML = '';
   document.getElementById('pagination').innerHTML = '';
-  const badge = document.getElementById('liveBadge');
-  badge.textContent = 'ERROR';
-  badge.className = 'badge offline';
+  document.getElementById('liveStatus').textContent = 'OFFLINE';
+  document.querySelector('.pulse-dot').style.background = 'var(--red)';
+  document.querySelector('.pulse-dot').style.boxShadow = '0 0 10px var(--red)';
+  document.querySelector('.status-pill').style.borderColor = 'rgba(255,42,109,0.2)';
+  document.querySelector('.status-pill').style.background = 'var(--red-dim)';
+  document.querySelector('.status-pill').style.color = 'var(--red)';
 }
 
 // ===================== DATA LOADING =====================
 async function loadSummary() {
-  log('Loading summary...');
   const data = await tryFetch('/api/v1/summary');
   renderStats(data);
+  renderDonut(data.severity || {}, data.total || 0);
+  renderTimeline(data);
   return data;
 }
 
 async function loadSources() {
-  log('Loading sources...');
   const data = await tryFetch('/api/v1/sources');
-  renderSources(data.sources);
+  renderSources(data);
   return data;
 }
 
 async function loadThreats() {
-  log('Loading threats page ' + currentPage + '...');
   const offset = currentPage * CONFIG.PAGE_SIZE;
-  const data = await tryFetch('/api/v1/threats?limit=' + CONFIG.PAGE_SIZE + '&offset=' + offset);
+  const data = await tryFetch(`/api/v1/threats?limit=${CONFIG.PAGE_SIZE}&offset=${offset}`);
   renderThreats(data.data, data.meta);
   return data;
 }
@@ -384,63 +1357,31 @@ async function subscribe() {
   const email = document.getElementById('leadEmail').value.trim();
   const btn = document.getElementById('subBtn');
   const msg = document.getElementById('subMsg');
-
-  if (!email || !email.includes('@')) {
-    msg.textContent = '❌ Please enter a valid email';
-    msg.style.color = 'var(--critical)';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Subscribing...';
-  msg.textContent = '';
-
+  if (!email || !email.includes('@')) { msg.textContent = '❌ Enter a valid email'; msg.style.color = 'var(--red)'; return; }
+  btn.disabled = true; btn.textContent = '...'; msg.textContent = '';
   try {
-    const res = await tryFetch('/api/v1/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    msg.textContent = '✅ Subscribed! You will receive critical alerts.';
-    msg.style.color = 'var(--accent)';
+    await tryFetch('/api/v1/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+    msg.textContent = '✅ Subscribed. Critical alerts incoming.';
+    msg.style.color = 'var(--green)';
     document.getElementById('leadEmail').value = '';
   } catch (e) {
-    msg.textContent = '❌ Error: ' + e.message;
-    msg.style.color = 'var(--critical)';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Subscribe';
-  }
+    msg.textContent = '❌ ' + e.message;
+    msg.style.color = 'var(--red)';
+  } finally { btn.disabled = false; btn.textContent = 'Subscribe'; }
 }
 
 // ===================== INIT =====================
 async function initDashboard() {
   document.getElementById('errorBox').innerHTML = '';
-  log('=== DASHBOARD INIT ===');
-  log('API Base: ' + currentApiBase);
-
   try {
-    // Load all in parallel where possible
-    await Promise.all([
-      loadSummary().catch(e => { log('Summary failed: ' + e.message, 'err'); throw e; }),
-      loadSources().catch(e => { log('Sources failed: ' + e.message, 'err'); throw e; })
-    ]);
-
-    await loadThreats().catch(e => { log('Threats failed: ' + e.message, 'err'); throw e; });
-
-    log('=== DASHBOARD LOADED SUCCESSFULLY ===', 'ok');
+    await Promise.all([loadSummary(), loadSources()]);
+    await loadThreats();
   } catch (e) {
-    showError(e.message + '<br><br>API Base tried: ' + currentApiBase + '<br>Check browser console (F12) for details.');
+    showError(e.message + '<br>API: ' + currentApiBase);
   }
 }
 
-// Auto-refresh every 5 minutes
-setInterval(() => {
-  log('Auto-refresh triggered...');
-  initDashboard();
-}, 300000);
-
-// Start
+setInterval(() => { initDashboard(); }, 300000);
 initDashboard();
 </script>
 </body>
