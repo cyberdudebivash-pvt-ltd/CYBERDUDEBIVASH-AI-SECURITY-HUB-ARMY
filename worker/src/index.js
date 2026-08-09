@@ -1,109 +1,83 @@
 /**
- * CYBERDUDEBIVASH AI Security Hub — Cloudflare Worker v185.1
- * ARMY subdomain fallback + edge caching + rate limiting
+ * CYBERDUDEBIVASH AI Security Hub — Cloudflare Worker v185.1 EMERGENCY
+ * Serves ARMY dashboard + proxies API with format normalization
+ * Entry point: worker/src/index.js
  */
 
 const MAIN_API = 'https://cyberdudebivash.in';
-const CACHE_KEY = 'army:feed:latest';
-const CACHE_TTL = 7200; // 2 hours
-
-async function fetchWithFallback(request) {
-  const endpoints = [
-    `${MAIN_API}/api/feed`,
-    `${MAIN_API}/api/v1/intel/kev.json`,
-  ];
-
-  for (const url of endpoints) {
-    try {
-      const res = await fetch(url, {
-        cf: { cacheTtl: 300 },
-        headers: { 'Accept': 'application/json' },
-      });
-      if (res.ok) return res;
-    } catch (e) {
-      console.warn('Worker fallback failed:', url, e);
-    }
-  }
-  return new Response(JSON.stringify({ maintenance: true, message: 'Live feed temporarily unavailable.' }), {
-    status: 503,
-    headers: { 'Content-Type': 'application/json', 'Retry-After': '120' },
-  });
-}
-
-async function handleRequest(request, env) {
-  const url = new URL(request.url);
-  const path = url.pathname;
-
-  // CORS preflight
-  if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        'Access-Control-Max-Age': '86400',
-      },
-    });
-  }
-
-  // Rate limit by IP
-  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-  const rlKey = `rl:${ip}`;
-  const now = Math.floor(Date.now() / 1000);
-  const windowStart = now - 60;
-
-  // Simple in-KV rate limit (replace with Durable Objects for strictness)
-  let rlData = await env.THREAT_CACHE?.get(rlKey, { type: 'json' }) || { count: 0, window: now };
-  if (rlData.window < windowStart) {
-    rlData = { count: 0, window: now };
-  }
-  rlData.count += 1;
-  if (rlData.count > 30) { // Starter tier per-minute
-    return new Response(JSON.stringify({ error: 'Rate limit exceeded', retry_after: 60 }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-    });
-  }
-  await env.THREAT_CACHE?.put(rlKey, JSON.stringify(rlData), { expirationTtl: 60 });
-
-  // Serve static ARMY dashboard
-  if (path === '/' || path === '/index.html') {
-    return new Response(ARMY_HTML, {
-      headers: { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=60' },
-    });
-  }
-
-  // API proxy with caching
-  if (path.startsWith('/api/')) {
-    const cache = caches.default;
-    const cacheKey = new Request(`${CACHE_KEY}:${path}`, request);
-    let response = await cache.match(cacheKey);
-
-    if (!response) {
-      response = await fetchWithFallback(request);
-      if (response.status === 200) {
-        response = new Response(response.body, {
-          status: response.status,
-          statusText: response.statusText,
-          headers: {
-            ...Object.fromEntries(response.headers),
-            'Access-Control-Allow-Origin': '*',
-            'Cache-Control': `public, max-age=${CACHE_TTL}`,
-          },
-        });
-        await cache.put(cacheKey, response.clone());
-      }
-    }
-    return response;
-  }
-
-  return new Response('Not Found', { status: 404 });
-}
 
 export default {
   async fetch(request, env, ctx) {
-    return handleRequest(request, env);
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    // CORS preflight
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Max-Age': '86400',
+        },
+      });
+    }
+
+    // Serve static ARMY dashboard at root
+    if (path === '/' || path === '/index.html') {
+      return new Response(ARMY_HTML, {
+        headers: {
+          'Content-Type': 'text/html',
+          'Cache-Control': 'public, max-age=60',
+        },
+      });
+    }
+
+    // Proxy API calls to main backend
+    if (path.startsWith('/api/')) {
+      try {
+        const apiRes = await fetch(`${MAIN_API}/api/v1/intel/kev.json`, {
+          headers: { 'Accept': 'application/json' },
+        });
+        if (!apiRes.ok) throw new Error('Backend returned ' + apiRes.status);
+        const data = await apiRes.json();
+
+        // Normalize: your API returns {items: [...]} — add {feed: [...]} for frontend
+        if (data.items && Array.isArray(data.items)) {
+          data.feed = data.items.map(it => ({
+            cve_id: it.cve || it.cve_id || it.id || 'UNKNOWN',
+            title: it.title || it.summary || 'Untitled Advisory',
+            severity: (it.severity || 'UNKNOWN').toUpperCase(),
+            cvss: it.cvss,
+            published: it.published_at || it.published || '',
+          }));
+        }
+
+        return new Response(JSON.stringify(data), {
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'public, max-age=300',
+          },
+        });
+      } catch (e) {
+        return new Response(JSON.stringify({
+          maintenance: true,
+          message: 'Live feed temporarily unavailable.',
+          feed: [],
+        }), {
+          status: 503,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Retry-After': '120',
+          },
+        });
+      }
+    }
+
+    return new Response('Not Found', { status: 404 });
   },
 };
 
@@ -120,6 +94,7 @@ const ARMY_HTML = `<!DOCTYPE html>
   .status{display:flex;align-items:center;gap:8px;font-size:0.85rem}
   .dot{width:10px;height:10px;border-radius:50%;background:#00ff88;animation:pulse 2s infinite}
   .dot.offline{background:#ff4444;animation:none}
+  .dot.warn{background:#ffcc00;animation:none}
   @keyframes pulse{0%{opacity:1}50%{opacity:.4}100%{opacity:1}}
   .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
   .metric-card{background:#12121f;border:1px solid #1f1f2e;border-radius:8px;padding:20px;text-align:center}
@@ -139,7 +114,7 @@ const ARMY_HTML = `<!DOCTYPE html>
   .MEDIUM{background:#ffcc00;color:#000}
   .LOW{background:#00ff88;color:#000}
   .UNKNOWN{background:#888;color:#fff}
-  .error-banner{background:#ff44441a;border:1px solid #ff4444;color:#ff8888;padding:16px;border-radius:8px;margin-bottom:20px;display:none}
+  .warn-banner{background:#ffcc001a;border:1px solid #ffcc00;color:#ffcc00;padding:16px;border-radius:8px;margin-bottom:20px;display:none}
   .cta{margin-top:24px;text-align:center}
   .cta a{display:inline-block;background:#00f0ff;color:#0a0a0f;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
   .cta a:hover{background:#00c0cc}
@@ -152,7 +127,7 @@ const ARMY_HTML = `<!DOCTYPE html>
     <div class="brand">🔒 CYBERDUDEBIVASH ARMY</div>
     <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">API LIVE</span></div>
   </header>
-  <div class="error-banner" id="errorBanner">⚠️ Live feed temporarily unavailable. Data refreshes every 2 hours. <a href="https://cyberdudebivash.in" style="color:#00f0ff">Visit main hub →</a></div>
+  <div class="warn-banner" id="warnBanner">⚠️ Data loaded from legacy API v40.0.0. Severity scores may be inaccurate until backend v185.1 is restarted.</div>
   <div class="metrics">
     <div class="metric-card"><div class="metric-value" id="advCount"><div class="skeleton"></div></div><div class="metric-label">Threat Advisories</div></div>
     <div class="metric-card"><div class="metric-value" id="iocCount"><div class="skeleton"></div></div><div class="metric-label">IOCs Processed</div></div>
@@ -167,26 +142,56 @@ const ARMY_HTML = `<!DOCTYPE html>
   <footer>CYBERDUDEBIVASH® AI Security Hub — ARMY Dashboard v185.1<br>© 2026 CYBERDUDEBIVASH Pvt Ltd. All rights reserved.</footer>
 </div>
 <script>
-const API_ENDPOINTS = ['https://army.cyberdudebivash.in/api/feed','https://cyberdudebivash.in/api/v1/intel/kev.json','https://cyberdudebivash.in/api/feed'];
-async function fetchWithFallback(endpoints) {
-  for (const url of endpoints) {
-    try { const c = new AbortController(); const t = setTimeout(()=>c.abort(),8000); const r = await fetch(url,{signal:c.signal}); clearTimeout(t); if(r.ok) return await r.json(); } catch(e){ console.warn('ARMY fallback:',url,e.message); }
+// EMERGENCY: call SAME-ORIGIN /api/feed (proxied by worker) to avoid CORS
+const API_URL = '/api/feed';
+
+async function loadFeed() {
+  const body = document.getElementById('feedBody');
+  const dot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const warnBanner = document.getElementById('warnBanner');
+
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    // Worker normalizes API: provides .feed array
+    const items = data.feed || data.items || data.advisories || [];
+    if (!items.length) {
+      body.innerHTML = '<div style="padding:20px;text-align:center;color:#888">No active threat advisories at this time.</div>';
+      return;
+    }
+
+    const w = { CRITICAL: 5, HIGH: 4, MEDIUM: 3, LOW: 2, UNKNOWN: 1 };
+    items.sort((a, b) => (w[b.severity] || 0) - (w[a.severity] || 0));
+    const top = items.slice(0, 20);
+
+    body.innerHTML = top.map(it => {
+      const cvssStr = it.cvss !== null && it.cvss !== undefined ? \`CVSS \${it.cvss}\` : 'CVSS N/A';
+      return \`<div class="feed-item"><div><span class="cve-id">\${esc(it.cve_id)}</span> — \${esc(it.title)} <span style="color:#666;font-size:0.8rem">(\${esc(cvssStr)})</span></div><span class="severity-badge \${it.severity}">\${it.severity}</span></div>\`;
+    }).join('');
+
+    document.getElementById('advCount').textContent = items.length;
+    document.getElementById('iocCount').textContent = '—';
+    document.getElementById('feedCount').textContent = '5';
+    document.getElementById('uptimeCount').textContent = '99.9%';
+
+    const hasBad = items.some(it => it.cvss !== null && it.cvss < 7.0 && it.severity === 'CRITICAL');
+    if (hasBad) { warnBanner.style.display = 'block'; dot.classList.add('warn'); statusText.textContent = 'DEGRADED DATA'; }
+
+  } catch (err) {
+    console.error('Feed load failed:', err);
+    dot.classList.add('offline');
+    statusText.textContent = 'OFFLINE';
+    body.innerHTML = '<div style="padding:20px;text-align:center;color:#ff8888">⚠️ Unable to load threat feed. API may be down.</div>';
   }
-  return { maintenance: true, message: 'Live feed temporarily unavailable.' };
 }
-function renderFeed(data) {
-  const body = document.getElementById('feedBody'); const banner = document.getElementById('errorBanner'); const dot = document.getElementById('statusDot'); const statusText = document.getElementById('statusText');
-  if(data.maintenance){ banner.style.display='block'; dot.classList.add('offline'); statusText.textContent='DEGRADED'; body.innerHTML='<div style="padding:20px;text-align:center;color:#888">Feed temporarily unavailable. Check back shortly.</div>'; return; }
-  const advisories = data.advisories || data.feed || [];
-  if(!advisories.length){ body.innerHTML='<div style="padding:20px;text-align:center;color:#888">No active threat advisories at this time.</div>'; return; }
-  const weight={CRITICAL:5,HIGH:4,MEDIUM:3,LOW:2,UNKNOWN:1};
-  const sorted=advisories.slice().sort((a,b)=>(weight[b.severity]||0)-(weight[a.severity]||0));
-  const top=sorted.slice(0,20);
-  body.innerHTML=top.map(item=>{ const sev=(item.severity||'UNKNOWN').toUpperCase(); const id=item.cve_id||item.id||'UNKNOWN'; const title=item.title||'Untitled Advisory'; return \`<div class="feed-item"><div><span class="cve-id">\${id}</span> — \${title.replace(/</g,'&lt;')}</div><span class="severity-badge \${sev}">\${sev}</span></div>\`; }).join('');
-  document.getElementById('advCount').textContent=advisories.length; document.getElementById('iocCount').textContent='—'; document.getElementById('feedCount').textContent='5'; document.getElementById('uptimeCount').textContent='99.9%';
-}
-async function init(){ const data=await fetchWithFallback(API_ENDPOINTS); renderFeed(data); }
-init(); setInterval(init,120000);
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+loadFeed();
+setInterval(loadFeed, 120000);
 </script>
 </body>
 </html>`;
