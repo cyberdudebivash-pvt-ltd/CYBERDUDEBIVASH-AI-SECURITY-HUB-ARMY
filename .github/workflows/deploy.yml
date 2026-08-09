@@ -23,14 +23,35 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: deploy worker/index.js --name cyberdudebivash-army
+          node-version: '20'
+      - name: Install Wrangler
+        run: npm install -g wrangler
+      - name: Deploy to Cloudflare Workers
+        run: wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+  deploy-frontend:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: Deploy Pages
+        uses: actions/deploy-pages@v4
 
   deploy-backend:
     needs: test
@@ -38,7 +59,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy backend
+      - name: Deploy backend to production server
         run: |
-          echo "Deploy backend to your VPS / Render / Railway here"
-          # Example: ssh user@host "cd /app && git pull && systemctl restart army-api"
+          echo "=========================================="
+          echo "⚠️  BACKEND DEPLOY IS A MANUAL STEP"
+          echo "=========================================="
+          echo "Your backend server needs these actions:"
+          echo "1. SSH into your VPS / Render / Railway"
+          echo "2. git pull origin main"
+          echo "3. pip install -r requirements.txt"
+          echo "4. Replace old app with cyberdudebivash_army_backend.py"
+          echo "5. Restart: systemctl restart army-api OR pm2 restart all"
+          echo ""
+          echo "Until you do this, cyberdudebivash.in/api serves OLD data."
+          echo "=========================================="
+          exit 0
