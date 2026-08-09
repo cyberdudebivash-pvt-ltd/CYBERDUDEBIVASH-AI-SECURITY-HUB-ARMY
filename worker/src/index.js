@@ -1,7 +1,7 @@
 /**
- * CYBERDUDEBIVASH AI Security Hub — Cloudflare Worker v185.1 EMERGENCY
- * Serves ARMY dashboard + proxies API with format normalization
- * Entry point: worker/src/index.js
+ * CYBERDUDEBIVASH AI Security Hub — Cloudflare Worker v185.1 FINAL
+ * Entry: worker/src/index.js
+ * NO CACHE. Deploy manually: cd worker && wrangler deploy
  */
 
 const MAIN_API = 'https://cyberdudebivash.in';
@@ -11,7 +11,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // CORS preflight
+    // CORS
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         status: 204,
@@ -24,26 +24,28 @@ export default {
       });
     }
 
-    // Serve static ARMY dashboard at root
+    // ARMY Dashboard — NO CACHE
     if (path === '/' || path === '/index.html') {
       return new Response(ARMY_HTML, {
         headers: {
           'Content-Type': 'text/html',
-          'Cache-Control': 'public, max-age=60',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
       });
     }
 
-    // Proxy API calls to main backend
+    // API Proxy — fetch live data, transform, NO CACHE
     if (path.startsWith('/api/')) {
       try {
         const apiRes = await fetch(`${MAIN_API}/api/v1/intel/kev.json`, {
           headers: { 'Accept': 'application/json' },
         });
-        if (!apiRes.ok) throw new Error('Backend returned ' + apiRes.status);
+        if (!apiRes.ok) throw new Error('Backend ' + apiRes.status);
         const data = await apiRes.json();
 
-        // Normalize: your API returns {items: [...]} — add {feed: [...]} for frontend
+        // Transform {items: [...]} → {feed: [...]}
         if (data.items && Array.isArray(data.items)) {
           data.feed = data.items.map(it => ({
             cve_id: it.cve || it.cve_id || it.id || 'UNKNOWN',
@@ -58,7 +60,7 @@ export default {
           headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
-            'Cache-Control': 'public, max-age=300',
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
           },
         });
       } catch (e) {
@@ -71,7 +73,7 @@ export default {
           headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
-            'Retry-After': '120',
+            'Cache-Control': 'no-store',
           },
         });
       }
@@ -83,7 +85,12 @@ export default {
 
 const ARMY_HTML = `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>CYBERDUDEBIVASH AI Security Hub — ARMY v185.1</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -142,54 +149,38 @@ const ARMY_HTML = `<!DOCTYPE html>
   <footer>CYBERDUDEBIVASH® AI Security Hub — ARMY Dashboard v185.1<br>© 2026 CYBERDUDEBIVASH Pvt Ltd. All rights reserved.</footer>
 </div>
 <script>
-// EMERGENCY: call SAME-ORIGIN /api/feed (proxied by worker) to avoid CORS
 const API_URL = '/api/feed';
-
 async function loadFeed() {
   const body = document.getElementById('feedBody');
   const dot = document.getElementById('statusDot');
   const statusText = document.getElementById('statusText');
   const warnBanner = document.getElementById('warnBanner');
-
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch(API_URL, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-
-    // Worker normalizes API: provides .feed array
     const items = data.feed || data.items || data.advisories || [];
-    if (!items.length) {
-      body.innerHTML = '<div style="padding:20px;text-align:center;color:#888">No active threat advisories at this time.</div>';
-      return;
-    }
-
+    if (!items.length) { body.innerHTML = '<div style="padding:20px;text-align:center;color:#888">No active threat advisories at this time.</div>'; return; }
     const w = { CRITICAL: 5, HIGH: 4, MEDIUM: 3, LOW: 2, UNKNOWN: 1 };
     items.sort((a, b) => (w[b.severity] || 0) - (w[a.severity] || 0));
     const top = items.slice(0, 20);
-
     body.innerHTML = top.map(it => {
       const cvssStr = it.cvss !== null && it.cvss !== undefined ? \`CVSS \${it.cvss}\` : 'CVSS N/A';
       return \`<div class="feed-item"><div><span class="cve-id">\${esc(it.cve_id)}</span> — \${esc(it.title)} <span style="color:#666;font-size:0.8rem">(\${esc(cvssStr)})</span></div><span class="severity-badge \${it.severity}">\${it.severity}</span></div>\`;
     }).join('');
-
     document.getElementById('advCount').textContent = items.length;
     document.getElementById('iocCount').textContent = '—';
     document.getElementById('feedCount').textContent = '5';
     document.getElementById('uptimeCount').textContent = '99.9%';
-
     const hasBad = items.some(it => it.cvss !== null && it.cvss < 7.0 && it.severity === 'CRITICAL');
     if (hasBad) { warnBanner.style.display = 'block'; dot.classList.add('warn'); statusText.textContent = 'DEGRADED DATA'; }
-
   } catch (err) {
     console.error('Feed load failed:', err);
-    dot.classList.add('offline');
-    statusText.textContent = 'OFFLINE';
+    dot.classList.add('offline'); statusText.textContent = 'OFFLINE';
     body.innerHTML = '<div style="padding:20px;text-align:center;color:#ff8888">⚠️ Unable to load threat feed. API may be down.</div>';
   }
 }
-
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
 loadFeed();
 setInterval(loadFeed, 120000);
 </script>
