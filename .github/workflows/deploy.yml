@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -23,22 +32,28 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: worker
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install Wrangler
-        run: npm install -g wrangler
+
+      - name: Validate secrets exist
+        run: |
+          if [ -z "${{ secrets.CF_API_TOKEN }}" ]; then
+            echo "❌ Secret CF_API_TOKEN is missing. Add it in Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+          if [ -z "${{ secrets.CF_ACCOUNT_ID }}" ]; then
+            echo "❌ Secret CF_ACCOUNT_ID is missing. Add it in Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+          echo "✅ Cloudflare secrets validated"
+
       - name: Deploy to Cloudflare Workers
-        run: wrangler deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: "worker"
+          # wrangler.toml in worker/ must define: name, main, compatibility_date
 
   deploy-frontend:
     needs: test
@@ -47,11 +62,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Deploy to GitHub Pages
-        uses: actions/upload-pages-artifact@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: .
-      - name: Deploy Pages
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          exclude_assets: "worker,*.py,requirements.txt,deploy.sh,__pycache__"
 
   deploy-backend:
     needs: test
@@ -59,18 +74,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy backend to production server
+      - name: Backend deploy reminder
         run: |
           echo "=========================================="
-          echo "⚠️  BACKEND DEPLOY IS A MANUAL STEP"
+          echo "⚠️  MANUAL BACKEND DEPLOY REQUIRED"
           echo "=========================================="
-          echo "Your backend server needs these actions:"
-          echo "1. SSH into your VPS / Render / Railway"
-          echo "2. git pull origin main"
-          echo "3. pip install -r requirements.txt"
-          echo "4. Replace old app with cyberdudebivash_army_backend.py"
-          echo "5. Restart: systemctl restart army-api OR pm2 restart all"
-          echo ""
-          echo "Until you do this, cyberdudebivash.in/api serves OLD data."
+          echo "Your live API (cyberdudebivash.in) still runs OLD code."
+          echo "SSH into your server and restart with the new backend file."
           echo "=========================================="
-          exit 0
