@@ -6,15 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -32,41 +23,28 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
     steps:
       - uses: actions/checkout@v4
-
-      - name: Validate secrets exist
+      - name: Validate secrets
         run: |
           if [ -z "${{ secrets.CF_API_TOKEN }}" ]; then
-            echo "❌ Secret CF_API_TOKEN is missing. Add it in Settings > Secrets and variables > Actions"
+            echo "❌ Secret CF_API_TOKEN is missing."
             exit 1
           fi
           if [ -z "${{ secrets.CF_ACCOUNT_ID }}" ]; then
-            echo "❌ Secret CF_ACCOUNT_ID is missing. Add it in Settings > Secrets and variables > Actions"
+            echo "❌ Secret CF_ACCOUNT_ID is missing."
             exit 1
           fi
           echo "✅ Cloudflare secrets validated"
-
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: "worker"
-          # wrangler.toml in worker/ must define: name, main, compatibility_date
-
-  deploy-frontend:
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
-          exclude_assets: "worker,*.py,requirements.txt,deploy.sh,__pycache__"
 
   deploy-backend:
     needs: test
