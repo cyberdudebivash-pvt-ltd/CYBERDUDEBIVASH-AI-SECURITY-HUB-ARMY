@@ -1,42 +1,42 @@
-#!/bin/bash
-# CYBERDUDEBIVASH® AI SECURITY HUB ARMY — Deployment Script
-# Run on your VPS / cloud server
+#!/usr/bin/env bash
+# CYBERDUDEBIVASH AI Security Hub — Deployment Script v185.1
+set -euo pipefail
 
-echo "🔥 Deploying CYBERDUDEBIVASH AI SECURITY HUB ARMY..."
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
-# 1. Install dependencies
-pip install -r requirements.txt
+echo -e "${GREEN}🚀 CYBERDUDEBIVASH ARMY Deployment v185.1${NC}"
 
-# 2. Run the server
-# For development:
-# python cyberdudebivash_army_backend.py
+# Validate tests first
+echo -e "${YELLOW}▶ Running validation suite...${NC}"
+python test_hotfix.py || { echo -e "${RED}❌ Tests failed. Aborting deploy.${NC}"; exit 1; }
 
-# For production (with auto-restart):
-# Using PM2:
-# pm2 start "uvicorn cyberdudebivash_army_backend:app --host 0.0.0.0 --port 8080" --name "cyberdudebivash-army"
+# Deploy options
+case "${1:-all}" in
+  backend|all)
+    echo -e "${YELLOW}▶ Deploying backend...${NC}"
+    # Replace with your actual deploy command:
+    # scp cyberdudebivash_army_backend.py user@your-vps:/app/
+    # ssh user@your-vps "cd /app && pip install -r requirements.txt && systemctl restart army-api"
+    echo -e "${GREEN}✅ Backend deploy command placeholder executed.${NC}"
+    ;;
+  worker|all)
+    echo -e "${YELLOW}▶ Deploying Cloudflare Worker...${NC}"
+    if command -v wrangler &> /dev/null; then
+      wrangler deploy worker/index.js --name cyberdudebivash-army
+    else
+      echo -e "${RED}⚠️ wrangler not installed. Install: npm install -g wrangler${NC}"
+      exit 1
+    fi
+    ;;
+  frontend|all)
+    echo -e "${YELLOW}▶ Deploying frontend...${NC}"
+    # Replace with your actual static host deploy:
+    # aws s3 sync . s3://your-bucket --exclude "*" --include "index.html"
+    echo -e "${GREEN}✅ Frontend deploy command placeholder executed.${NC}"
+    ;;
+esac
 
-# Using systemd (recommended for production):
-# sudo nano /etc/systemd/system/cyberdudebivash-army.service
-# Add the following:
-# [Unit]
-# Description=CYBERDUDEBIVASH AI SECURITY HUB ARMY
-# After=network.target
-# 
-# [Service]
-# User=ubuntu
-# WorkingDirectory=/var/www/cyberdudebivash-army
-# ExecStart=/usr/bin/python3 -m uvicorn cyberdudebivash_army_backend:app --host 0.0.0.0 --port 8080
-# Restart=always
-# 
-# [Install]
-# WantedBy=multi-user.target
-# 
-# Then run:
-# sudo systemctl enable cyberdudebivash-army
-# sudo systemctl start cyberdudebivash-army
-
-echo "✅ Deployment complete!"
-echo "🌐 Dashboard: http://your-server-ip:8080/"
-echo "📡 API Health: http://your-server-ip:8080/api/v1/health"
-echo "📊 API Stats: http://your-server-ip:8080/api/v1/stats"
-echo "🎯 API Threats: http://your-server-ip:8080/api/v1/threats"
+echo -e "${GREEN}🎉 Deployment complete.${NC}"
