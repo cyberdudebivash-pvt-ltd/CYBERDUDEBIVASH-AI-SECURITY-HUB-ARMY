@@ -101,7 +101,15 @@ Each entry lists exactly what was found, where, and why it matters. Entries mark
 
 ---
 
-### GAP-005 — Two Cloudflare Worker deploy workflows with different secret names, both triggered by the same pushes, have caused repeated production firefighting
+### GAP-005 — THREE independent, uncoordinated Cloudflare Worker deploy mechanisms, at least one of which is actively failing
+**Severity:** P1 · **Status: [DOCUMENTED ONLY — do not blind-fix live deploy credentials/infra]**
+**Update (2026-08-10, discovered via this PR's own CI activity):** this is worse than originally scoped. There is a **third** deploy mechanism beyond the two GitHub Actions workflows below: Cloudflare's native "Workers Builds" Git integration, configured entirely in the Cloudflare dashboard (no corresponding file in this repository) and connected directly to this GitHub repo. It builds on pushes independently of the GitHub Actions workflows. **It failed on this PR's own commit** (`6c844961`, check run "Workers Builds: cyberdudebivash-army-api", conclusion `failure`, `dash.cloudflare.com` build logs not accessible without dashboard credentials). Two concrete, evidence-based observations about why:
+- The failing check and its Cloudflare dashboard URL both reference a Worker script named **`cyberdudebivash-army-api`**.
+- `worker/wrangler.toml:1` declares `name = "cyberdudebivash-security-hub"` — a **different name** — while `worker/package.json:2` declares `"name": "cyberdudebivash-army-api"`, matching the dashboard project instead.
+- This mismatch was not introduced by this PR (neither name field was touched by any commit in this branch) and, since both files are otherwise unchanged from `main`, almost certainly predates it and would reproduce on `main` too. It is the leading candidate root cause: if Cloudflare's Git-integration build step validates or relies on the `wrangler.toml` name matching the connected dashboard service, a mismatch here would explain a build failure with no code-level bug involved.
+- **Not fixed in this branch.** Renaming either field is a guess without Cloudflare dashboard access to confirm which name the live, DNS-bound Worker service actually is — get it wrong and a currently-working deploy path could break instead. This needs someone with dashboard access to check the actual build log and confirm before either name is changed.
+
+### GAP-005a — Two Cloudflare Worker deploy *workflows* (GitHub Actions side) with different secret names, both triggered by the same pushes
 **Severity:** P1 · **Status: [DOCUMENTED ONLY — do not blind-fix live deploy credentials]**
 **Offering:** Cross-cutting (deployment of the one live product, the ARMY Worker)
 **Customer impact:** Deploy failures/delays to the only live customer-facing surface in this repository.
@@ -260,7 +268,8 @@ Compare this repository's `ecosystem/ecosystem.html:498-537`:
 | GAP-002 | MSSP sells nonexistent multi-tenancy | P0 | ESCALATE |
 | GAP-003 | No auth on paid-tier backend; ingestion auth regression pattern | P1 (P0 if deployed as-is) | ESCALATE |
 | GAP-004 | Public exposure via GitHub Pages (whole repo + account cache) | P1 | **FIXED** |
-| GAP-005 | Dual conflicting Cloudflare deploy workflows | P1 | DOCUMENTED |
+| GAP-005 | Three independent Cloudflare deploy mechanisms; native Workers Builds actively failing on a name mismatch | P1 | DOCUMENTED (evidence: live CI failure on this PR) |
+| GAP-005a | Two GitHub-Actions-side deploy workflows also conflict | P1 | DOCUMENTED |
 | GAP-006 | Tested code ≠ deployed code | P1 | DOCUMENTED |
 | GAP-007 | CORS config not enforced | P2 | DOCUMENTED |
 | GAP-008 | Dead cron/KV/Queue config | P2 | DOCUMENTED |
