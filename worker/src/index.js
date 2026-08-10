@@ -157,6 +157,24 @@ const ARMY_HTML = `<!DOCTYPE html>
 </div>
 <script>
 const API_URL = '/api/feed';
+// Some upstream responses carry a non-array \`feed\` (e.g. a source-label string
+// like "cisa-kev") alongside the real advisory list in \`items\`. Only ever treat
+// an actual array as the advisory list; otherwise fall back to \`items\` mapped
+// into the same shape, and finally to an empty list.
+function normalizeAdvisories(data) {
+  if (Array.isArray(data.feed)) return data.feed;
+  if (Array.isArray(data.items)) {
+    return data.items.map(it => ({
+      cve_id: it.cve || it.cve_id || it.id || 'UNKNOWN',
+      title: it.title || it.summary || 'Untitled Advisory',
+      severity: (it.severity || 'UNKNOWN').toUpperCase(),
+      cvss: it.cvss,
+      published: it.published_at || it.published || '',
+    }));
+  }
+  if (Array.isArray(data.advisories)) return data.advisories;
+  return [];
+}
 async function loadFeed() {
   const body = document.getElementById('feedBody');
   const dot = document.getElementById('statusDot');
@@ -166,7 +184,7 @@ async function loadFeed() {
     const res = await fetch(API_URL, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    const items = data.feed || data.items || data.advisories || [];
+    const items = normalizeAdvisories(data);
     if (!items.length) { body.innerHTML = '<div style="padding:20px;text-align:center;color:#888">No active threat advisories at this time.</div>'; return; }
     const w = { CRITICAL: 5, HIGH: 4, MEDIUM: 3, LOW: 2, UNKNOWN: 1 };
     items.sort((a, b) => (w[b.severity] || 0) - (w[a.severity] || 0));

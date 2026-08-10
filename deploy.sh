@@ -16,26 +16,24 @@ python test_hotfix.py || { echo -e "${RED}❌ Tests failed. Aborting deploy.${NC
 # Deploy options
 case "${1:-all}" in
   backend|all)
-    echo -e "${YELLOW}▶ Deploying backend...${NC}"
-    # Replace with your actual deploy command:
-    # scp cyberdudebivash_army_backend.py user@your-vps:/app/
-    # ssh user@your-vps "cd /app && pip install -r requirements.txt && systemctl restart army-api"
-    echo -e "${GREEN}✅ Backend deploy command placeholder executed.${NC}"
+    echo -e "${YELLOW}▶ Backend deploy...${NC}"
+    echo -e "${RED}⚠️  NOT IMPLEMENTED. The backend is not currently deployed anywhere.${NC}"
+    echo -e "${RED}   See docs/commercial/COMMERCIAL_PRODUCTION_GAP_REGISTER.md (GAP-003, GAP-006)${NC}"
+    echo -e "${RED}   before wiring this up — the backend has no authentication yet.${NC}"
     ;;
   worker|all)
     echo -e "${YELLOW}▶ Deploying Cloudflare Worker...${NC}"
     if command -v wrangler &> /dev/null; then
-      wrangler deploy worker/index.js --name cyberdudebivash-army
+      (cd worker && wrangler deploy)
     else
       echo -e "${RED}⚠️ wrangler not installed. Install: npm install -g wrangler${NC}"
       exit 1
     fi
     ;;
   frontend|all)
-    echo -e "${YELLOW}▶ Deploying frontend...${NC}"
-    # Replace with your actual static host deploy:
-    # aws s3 sync . s3://your-bucket --exclude "*" --include "index.html"
-    echo -e "${GREEN}✅ Frontend deploy command placeholder executed.${NC}"
+    echo -e "${YELLOW}▶ Frontend deploy...${NC}"
+    echo -e "${YELLOW}   Frontend deploys automatically via .github/workflows/deploy-frontend.yml${NC}"
+    echo -e "${YELLOW}   on push to main. This script does not deploy it directly.${NC}"
     ;;
 esac
 
