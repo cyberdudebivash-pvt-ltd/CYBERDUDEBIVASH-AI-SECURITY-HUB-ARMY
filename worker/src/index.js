@@ -1,7 +1,7 @@
 /**
  * CYBERDUDEBIVASH AI Security Hub — Cloudflare Worker v185.1 FINAL
  * Entry: worker/src/index.js
- * NO CACHE. Deploy manually: cd worker && wrangler deploy
+ * Serves ARMY dashboard + proxies API
  */
 
 const MAIN_API = 'https://cyberdudebivash.in';
@@ -11,7 +11,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // CORS
+    // CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         status: 204,
@@ -45,7 +45,6 @@ export default {
         if (!apiRes.ok) throw new Error('Backend ' + apiRes.status);
         const data = await apiRes.json();
 
-        // Transform {items: [...]} → {feed: [...]}
         if (data.items && Array.isArray(data.items)) {
           data.feed = data.items.map(it => ({
             cve_id: it.cve || it.cve_id || it.id || 'UNKNOWN',
@@ -80,6 +79,14 @@ export default {
     }
 
     return new Response('Not Found', { status: 404 });
+  },
+
+  // Dummy queue handler — required because worker has Queue binding in dashboard
+  async queue(batch, env, ctx) {
+    for (const message of batch.messages) {
+      console.log('Queue message received:', message.body);
+      message.ack();
+    }
   },
 };
 
