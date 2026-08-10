@@ -1,6 +1,24 @@
-name = "cyberdudebivash-security-hub"
+name = "cyberdudebivash-army-api"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
+
+# IMPORTANT: this name was "cyberdudebivash-security-hub" until 2026-08-10.
+# That name is a SHARED/entangled Cloudflare Worker also bound to the route
+# cyberdudebivash.in/api (the main hub's own API, confirmed via the
+# Cloudflare dashboard's Workers & Pages listing showing 10.8k real
+# requests on it) -- NOT dedicated to ARMY. Deploying this repo's code
+# there replaced whatever the main hub's real /api handler was running with
+# ARMY's CISA/EPSS feed. Do not rename this back to "cyberdudebivash-security-hub"
+# without first confirming, in the Cloudflare dashboard, that the target
+# Worker has no routes/domains bound other than the ones this ARMY project
+# owns. "cyberdudebivash-army-api" is a pre-existing, otherwise-unclaimed
+# Worker in the same account (only its own workers.dev subdomain, no
+# custom routes) -- and matches worker/package.json's name AND
+# worker/fix-wrangler.cmd's own regenerated wrangler.toml, both of which
+# already said "cyberdudebivash-army-api" before this fix. This repo's
+# wrangler.toml was the one out of sync, not the other way round. See
+# docs/commercial/COMMERCIAL_PRODUCTION_GAP_REGISTER.md GAP-018 for the
+# full incident writeup.
 
 [vars]
 CORS_ORIGIN = "https://army.cyberdudebivash.in"
