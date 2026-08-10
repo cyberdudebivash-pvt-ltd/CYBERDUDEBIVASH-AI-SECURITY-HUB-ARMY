@@ -92,7 +92,12 @@ assert_test("KEV+EPSS>=0.5 floor 9.0", r["risk_score"] >= 9.0, f"got {r['risk_sc
 assert_test("KEV+EPSS>=0.5 severity CRITICAL", r["severity"] == "CRITICAL", f"got {r['severity']}")
 
 r = compute_composite_risk(None, 0.3, True, 0)
-assert_test("KEV only floor 5.0", r["risk_score"] >= 5.0, f"got {r['risk_score']}")
+assert_test("KEV only floor 7.0", r["risk_score"] >= 7.0, f"got {r['risk_score']}")
+assert_test("KEV only severity HIGH", r["severity"] == "HIGH", f"got {r['severity']}")
+# Regression guard: a KEV-only floor of 5.0 (the original value here) passed
+# the risk_score check above but silently computed severity MEDIUM, not
+# HIGH, because map_cvss_to_severity needs >=7.0 for HIGH. This assertion
+# is what would have caught that; it didn't exist before this fix.
 
 r = compute_composite_risk(None, 0.8, False, 0)
 assert_test("EPSS>=0.5 only floor 4.0", r["risk_score"] >= 4.0, f"got {r['risk_score']}")

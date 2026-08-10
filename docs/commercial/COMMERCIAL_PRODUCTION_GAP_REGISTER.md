@@ -34,6 +34,7 @@ Each entry lists exactly what was found, where, and why it matters. Entries mark
 **Dependencies:** Cloudflare account access and GitHub repository Pages settings — both outside this session's access.
 **Test requirement:** After any routing change, repeat the exact live test performed in this audit: `curl -sI https://army.cyberdudebivash.in/api/feed` must return JSON with `content-type: application/json` from a Cloudflare-Worker-signed response (no `x-github-request-id` header), not a 404.
 **Rollback requirement:** Domain/DNS changes should be made with the previous configuration recorded before changing it, since this audit cannot see or restore the current dashboard-level settings.
+**Update (2026-08-10, founder-provided dashboard screenshot):** the routing question is now three-way, not two-way — see GAP-005's update. There's a second, misconfigured Cloudflare Worker (`cyberdudebivash-army-api`, serving static assets only, zero bindings) that could plausibly be what the custom domain is bound to instead of GitHub Pages or the correct `cyberdudebivash-security-hub`. Whoever resolves this needs to check which of the three `army.cyberdudebivash.in` is actually pointed at before changing anything. Separately: the client-side dependency on `cyberdudebivash.in` this gap originally described has now been removed entirely (see GAP-015) — once routing is fixed to reach a real Worker running this repo's code, ARMY no longer needs `cyberdudebivash.in` to be healthy at all.
 
 ---
 
@@ -107,7 +108,8 @@ Each entry lists exactly what was found, where, and why it matters. Entries mark
 - The failing check and its Cloudflare dashboard URL both reference a Worker script named **`cyberdudebivash-army-api`**.
 - `worker/wrangler.toml:1` declares `name = "cyberdudebivash-security-hub"` — a **different name** — while `worker/package.json:2` declares `"name": "cyberdudebivash-army-api"`, matching the dashboard project instead.
 - This mismatch was not introduced by this PR (neither name field was touched by any commit in this branch) and, since both files are otherwise unchanged from `main`, almost certainly predates it and would reproduce on `main` too. It is the leading candidate root cause: if Cloudflare's Git-integration build step validates or relies on the `wrangler.toml` name matching the connected dashboard service, a mismatch here would explain a build failure with no code-level bug involved.
-- **Not fixed in this branch.** Renaming either field is a guess without Cloudflare dashboard access to confirm which name the live, DNS-bound Worker service actually is — get it wrong and a currently-working deploy path could break instead. This needs someone with dashboard access to check the actual build log and confirm before either name is changed.
+- **Update (2026-08-10, founder-provided dashboard screenshot):** confirmed directly. `cyberdudebivash-army-api`'s dashboard page shows **Bindings: 0** ("No workers bound to this worker") and the message **"Metrics is unavailable for Workers with only static assets."** That second line means Cloudflare is serving this deployment as a static-file host, not running any Worker script at all — no `fetch()`/`scheduled()` handler, nothing dynamic. This is consistent with the Git integration's build settings pointing at the repo root instead of the `worker/` subdirectory: without finding `worker/wrangler.toml` there, it has nothing telling it to run a Worker script, so it silently falls back to publishing static files (`index.html` happens to be sitting right there at the root). This is almost certainly why hitting this service's routes returns static-page-like content with no working `/api/*`.
+- **Not fixed in this branch.** Renaming a field or reconfiguring a Git-integration build setting are both dashboard-side actions this audit cannot perform. **Recommended resolution (given to the founder directly):** don't try to repair `cyberdudebivash-army-api` — disconnect/delete it and confirm `army.cyberdudebivash.in`'s custom domain is bound to `cyberdudebivash-security-hub` (the service `wrangler.toml` actually declares, with the correct KV binding, already published successfully by the working `deploy-worker.yml` GitHub Actions job). That collapses three competing deploy paths down to one correct one instead of trying to fix a redundant, misconfigured second/third path.
 
 ### GAP-005a — Two Cloudflare Worker deploy *workflows* (GitHub Actions side) with different secret names, both triggered by the same pushes
 **Severity:** P1 · **Status: [DOCUMENTED ONLY — do not blind-fix live deploy credentials]**
@@ -154,16 +156,14 @@ Each entry lists exactly what was found, where, and why it matters. Entries mark
 
 ---
 
-### GAP-008 — Cron trigger and KV/Queue bindings are configured but unused (infra-as-code drift)
-**Severity:** P2 · **Status: [DOCUMENTED ONLY]**
+### GAP-008 — Cron trigger and KV/Queue bindings were configured but unused (infra-as-code drift)
+**Severity:** P2 · **Status: [FIXED in this branch]**
 **Offering:** ARMY dashboard
-**Root cause:** `wrangler.toml:12-13` configures a 6-hour cron trigger; `worker/src/index.js` exports no `scheduled()` handler, so each firing does nothing. `wrangler.toml:8-10` declares a `THREAT_INTEL_KV` binding never referenced in code. A Cloudflare Queue exists (per the code comment at `worker/src/index.js:84`) that isn't declared in `wrangler.toml` at all — dashboard-provisioned infrastructure not captured in source control.
-**Evidence:** `worker/wrangler.toml:1-13`; `worker/src/index.js:9-92` (full file reviewed, no `scheduled` export, no `env.THREAT_INTEL_KV` reference).
-**Currently harmless because:** the Worker fetches the upstream feed fresh on every HTTP request rather than depending on a cron-refreshed cache, so the dead cron trigger doesn't cause stale data today.
-**Recommended fix:** Either implement real scheduled ingestion (matching the "updated every 6 hours" marketing claim on `ecosystem/ecosystem.html`) or remove the unused cron trigger and KV binding so configuration reflects reality. **Not fixed in this branch** — this is a live-infrastructure config change (`wrangler.toml`) that deploys automatically via CI on merge to `main`; changing it should be a deliberate, watched deploy, not a blind edit in an audit branch.
-**Dependencies:** Product decision on whether scheduled ingestion is actually wanted.
-**Test requirement:** If implemented, verify the `scheduled()` handler fires and updates the customer-visible feed.
-**Rollback requirement:** Revert `wrangler.toml` cron entry.
+**Root cause:** `wrangler.toml:12-13` configures a 6-hour cron trigger; `worker/src/index.js` exported no `scheduled()` handler, so each firing did nothing. `wrangler.toml:8-10` declares a `THREAT_INTEL_KV` binding that was never referenced in code.
+**Evidence:** Original: `worker/wrangler.toml:1-13`; `worker/src/index.js` (no `scheduled` export, no `env.THREAT_INTEL_KV` reference).
+**Fix applied:** the worker rewrite for GAP-015/standalone-ARMY (below) added a real `scheduled()` handler that proactively refreshes the KV cache every 6h, and `THREAT_INTEL_KV` is now genuinely used for response caching (verified: cold-cache fetch ~1s, warm-cache fetch ~16ms in this session's testing). The Queue binding referenced by `worker/src/index.js`'s `queue()` handler remains dashboard-provisioned, outside source control — that part of this gap is unchanged and still worth capturing in `wrangler.toml` if/when convenient, but is genuinely low priority (the handler is a harmless no-op either way).
+**Test requirement:** Met — see GAP-015 for the live verification.
+**Rollback requirement:** N/A — purely additive.
 
 ---
 
@@ -259,6 +259,38 @@ Compare this repository's `ecosystem/ecosystem.html:498-537`:
 
 ---
 
+### GAP-015 — ARMY's data source depended entirely on cyberdudebivash.in's health; now fetches CISA KEV + FIRST.org EPSS directly
+**Severity:** P1 · **Status: [FIXED in this branch]**
+**Offering:** Threat Command ARMY dashboard/API
+**Customer impact (before):** Whenever `cyberdudebivash.in`'s backend went down (confirmed happening during this same engagement — see the VPS deployment work), ARMY went down with it, despite being marketed and usable as if it were an independent product.
+**Root cause:** `worker/src/index.js` proxied every request through `https://cyberdudebivash.in/api/v1/intel/kev.json`, and `index.html`'s fallback chain also called that domain directly. Neither had any data source that didn't ultimately depend on the main hub's backend being up.
+**Fix applied:** `worker/src/index.js` now fetches directly from CISA's public KEV catalog (`https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json`) and FIRST.org's public EPSS API, both free and keyless, with no reference to `cyberdudebivash.in` anywhere in the fetch path. Results are cached in `THREAT_INTEL_KV` (1h freshness window) and proactively refreshed every 6h via a new `scheduled()` handler (closes GAP-008). `index.html`'s fallback chain was reduced to the one endpoint that matters (`army.cyberdudebivash.in/api/feed`) — its two `cyberdudebivash.in` fallback URLs were removed, since keeping them would have silently reintroduced the exact dependency being removed.
+**Verification performed in this session (live, real data, not mocked):** cold-cache fetch returned 150 real advisories in ~1s; warm-cache fetch returned the same data in ~16ms; failure-path test (all outbound fetches forced to throw) correctly returned the existing honest `{maintenance:true, items:[]}` 503 response rather than crashing or fabricating data; `/api/health` and `/api/v1/intel/report/:cve_id` both verified against real CVE data.
+**What did not change:** severity for these entries is derived from KEV+EPSS only (CISA's feed carries no CVSS field) using the same floor logic as `cyberdudebivash_army_backend.py`'s `compute_composite_risk()` — see GAP-016, which fixes a mismatch found in that exact logic while doing this work. CORS remains wildcard (unchanged reasoning from GAP-007 — multiple legitimate origins still need to read this, and the data is public/non-sensitive).
+**Test requirement:** Met — see verification above. A live post-deploy check (`curl https://army.cyberdudebivash.in/api/feed`) is still needed once GAP-000/GAP-005's domain-routing question is resolved, since this fix cannot be observed at the production domain until traffic actually reaches this Worker.
+**Rollback requirement:** Revert this commit; the previous proxy-based `worker/src/index.js` is in git history.
+
+### GAP-016 — Backend severity floor for KEV-only advisories computed MEDIUM despite code/comment both saying HIGH
+**Severity:** P2 · **Status: [FIXED in this branch]**
+**Offering:** Underlies all CVSS/KEV/EPSS severity labeling, in both the Python backend and (as of GAP-015) the Worker
+**How this was found:** Cross-checking `cyberdudebivash_army_backend.py`'s `compute_composite_risk()` against `map_cvss_to_severity()`'s own thresholds while porting the same logic into the new Worker code for GAP-015, to keep both systems consistent.
+**Root cause:** For a KEV-listed advisory with no CVSS and no high-EPSS boost, `compute_composite_risk()` set `risk = max(risk, 5.0)` with an inline comment reading `# HIGH floor`. But `map_cvss_to_severity()` requires a score `>= 7.0` to return HIGH — `5.0` falls in its `>= 4.0` band, which is MEDIUM. The existing test for this branch (`test_hotfix.py`, "KEV only floor 5.0") only asserted `risk_score >= 5.0`, never checking the resulting `severity`, so this never surfaced as a failure despite 53/53 tests passing.
+**Customer impact:** None today — this backend is still undeployed (GAP-006). Would have under-labeled confirmed-actively-exploited (KEV-listed) vulnerabilities as MEDIUM instead of HIGH the moment it went live, understating real risk to anyone relying on the severity label to prioritize patching.
+**Fix applied:** Changed the floor to `7.0`, which actually lands in the HIGH band. Strengthened the test to assert `severity == "HIGH"` directly (not just the numeric floor), so this specific class of mismatch can't silently reappear. Also corrected a second, lower-stakes comment on the same block (an "INFO floor" of `0.5` that map_cvss_to_severity actually resolves to LOW, since INFO requires `< 0.1`) — left the value unchanged there since LOW is the more defensible label for "a real but low EPSS score exists" anyway, and changing it would have been a behavior change with no clear benefit.
+**Evidence:** `cyberdudebivash_army_backend.py` (severity-floor block); `test_hotfix.py` ("KEV only" test, now asserts severity).
+**Test requirement:** Met — `python3 test_hotfix.py` now 54/54 passing, including the new severity assertion.
+**Rollback requirement:** Revert the two changed lines; trivial.
+
+### GAP-017 — Evaluated and rejected a proposed "standalone ARMY worker" implementation that fabricated vulnerability data
+**Severity:** N/A (nothing shipped) · **Status: evaluated, not deployed**
+**Context:** Mid-engagement, a separately-generated `worker_standalone_army.js` (produced by a different AI tool, uploaded by the founder for review) proposed the same architectural direction as GAP-015 — decouple ARMY from `cyberdudebivash.in` by fetching CISA/EPSS directly. The direction was correct. The specific file was not usable as-is, for reasons worth recording so the same mistake isn't repeated:
+- Its CISA URL (`https://api.cisa.gov/known-exploited-vulnerabilities/catalog`) and EPSS URL (`https://api.first.org/epss/v1/cve/{id}`) were tested live in this session and do not work — the CISA one doesn't connect at all, the EPSS one returns a 404 HTML page. The correct URLs are the ones now in `worker/src/index.js` (see GAP-015).
+- Because both real fetches were wired to nonexistent endpoints, its `try/catch` fallback would fire on every single request, permanently serving 15 hardcoded fake advisories while labeling them "LIVE — Fresh from CISA." One of those fake entries reused a real CVE ID (`CVE-2026-8037`) with an entirely invented vendor/product/description that contradicts the real CISA record for that ID (verified against the real feed in this session).
+- Its `wrangler_standalone.toml` scoped the KV binding under `[env.production]`, but the given deploy instructions (`wrangler deploy`, no `--env` flag) would deploy to the default environment, which has no KV binding — caching would have silently never activated.
+- The proposed deployment method (copy files locally on Windows, run `wrangler deploy` directly) bypasses git and CI entirely, which would have reintroduced GAP-006 (deployed code diverging from repo code) immediately.
+**Why this matters enough to record:** fabricating vulnerability data under a real CVE identifier and presenting it as live CISA intelligence is a direct violation of this whole engagement's evidence/no-fabrication mandate, not a minor bug. It's documented here specifically so a future contributor (human or AI) doesn't re-introduce a "fallback data" pattern that fabricates rather than honestly degrading — the correct pattern, used throughout this repo since GAP-000, is an honest `maintenance: true` / empty state on failure.
+**Disposition:** Not merged, not deployed. GAP-015 implements the same underlying idea correctly.
+
 ## Register summary
 
 | ID | Title | Severity | Status |
@@ -268,16 +300,19 @@ Compare this repository's `ecosystem/ecosystem.html:498-537`:
 | GAP-002 | MSSP sells nonexistent multi-tenancy | P0 | ESCALATE |
 | GAP-003 | No auth on paid-tier backend; ingestion auth regression pattern | P1 (P0 if deployed as-is) | ESCALATE |
 | GAP-004 | Public exposure via GitHub Pages (whole repo + account cache) | P1 | **FIXED** |
-| GAP-005 | Three independent Cloudflare deploy mechanisms; native Workers Builds actively failing on a name mismatch | P1 | DOCUMENTED (evidence: live CI failure on this PR) |
+| GAP-005 | Three independent Cloudflare deploy mechanisms; native Workers Builds confirmed serving static-assets-only, zero bindings | P1 | DOCUMENTED (confirmed via founder dashboard screenshot) |
 | GAP-005a | Two GitHub-Actions-side deploy workflows also conflict | P1 | DOCUMENTED |
 | GAP-006 | Tested code ≠ deployed code | P1 | DOCUMENTED |
 | GAP-007 | CORS config not enforced | P2 | DOCUMENTED |
-| GAP-008 | Dead cron/KV/Queue config | P2 | DOCUMENTED |
+| GAP-008 | Dead cron/KV/Queue config | P2 | **FIXED** |
 | GAP-009 | Test suite overclaims scope | P3 | **FIXED** |
 | GAP-010 | `deploy.sh` wrong path + false success messages | P3 | **FIXED** |
 | GAP-011 | No methodology evidence for consulting offers | P2 | DOCUMENTED |
 | GAP-012 | Support claims lack infrastructure | P2 | DOCUMENTED |
 | GAP-013 | Duplicate drifting dashboard copies | P3 | DOCUMENTED |
 | GAP-014 | Live API pricing contradicts in-repo marketing pricing | P1 | ESCALATE |
+| GAP-015 | ARMY depended entirely on cyberdudebivash.in's health | P1 | **FIXED** |
+| GAP-016 | Backend severity-floor mislabeling (KEV-only → MEDIUM, not HIGH) | P2 | **FIXED** |
+| GAP-017 | Rejected a proposed worker with fabricated fallback vulnerability data | N/A | Evaluated, not deployed |
 
-**Zero P0/P1 findings were resolved by silently editing customer-facing pricing or claims.** Per the task's governance rules, GAP-000 (domain-routing half), GAP-001, GAP-002, GAP-003, GAP-005, and GAP-006 require a business, staffing, or credentials-access decision this audit is not positioned to make, and are escalated explicitly rather than guessed at. **GAP-000 is the one finding in this register verified by directly exercising the live production system rather than by source review alone, and it should be the founder's first action item regardless of read order.**
+**Zero P0/P1 findings were resolved by silently editing customer-facing pricing or claims.** Per the task's governance rules, GAP-000 (domain-routing half), GAP-001, GAP-002, GAP-003, GAP-005, and GAP-006 require a business, staffing, or credentials-access decision this audit is not positioned to make, and are escalated explicitly rather than guessed at. **GAP-000/GAP-005 together are the founder's first action item regardless of read order** — a dashboard-side fix (delete or reconfigure `cyberdudebivash-army-api`, confirm `army.cyberdudebivash.in` is bound to `cyberdudebivash-security-hub`) that everything else, including the now-fully-independent ARMY data pipeline shipped as GAP-015, is waiting on to actually reach production.
