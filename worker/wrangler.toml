@@ -29,3 +29,21 @@ id = "4778dfcff095404c9ba4eec59e658c3e"
 
 [triggers]
 crons = ["0 */6 * * *"]
+
+# army.cyberdudebivash.in currently resolves to a GitHub Pages deployment, not
+# this Worker (confirmed 2026-08-10 by response headers on a live request --
+# x-github-request-id and Fastly x-served-by/via, no Cloudflare-Worker-signed
+# response -- see GAP-000/GAP-019 in docs/commercial/COMMERCIAL_PRODUCTION_GAP_REGISTER.md).
+# No Worker Custom Domain has ever been bound to this hostname, so this Worker
+# has only ever been reachable at its own *.workers.dev subdomain.
+# Declaring the route below asks Cloudflare to provision it as a Custom Domain
+# on the next `wrangler deploy` -- this creates/repoints the DNS record and
+# gives the Worker exclusive ownership of the hostname at the edge, ahead of
+# GitHub Pages. If the deploying CI token lacks DNS/zone-edit permission, this
+# will fail loudly in the GitHub Actions log rather than silently no-op --
+# if that happens, bind it by hand instead: Cloudflare dashboard -> Workers &
+# Pages -> cyberdudebivash-army-api -> Settings -> Domains & Routes -> Add ->
+# Custom Domain -> army.cyberdudebivash.in
+[[routes]]
+pattern = "army.cyberdudebivash.in"
+custom_domain = true
