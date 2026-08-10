@@ -76,6 +76,40 @@ an India-focused audience without the setup overhead of AWS Lightsail's IAM.
 Any of the three works with the script below unmodified; it only assumes
 Ubuntu 22.04 and root/sudo access.
 
+### If you're doing this from a Windows machine
+
+Nothing below changes — every command from step 2 onward runs *on the
+Ubuntu VPS itself*, not on your local machine. Your local OS only affects
+how you get an SSH session open in the first place, and Windows 10/11 ships
+a native OpenSSH client for that, so no PuTTY or extra install is normally
+needed. Two one-time preparation steps before you start the numbered list:
+
+- **Confirm you have `ssh`:** open PowerShell and type `ssh`. If it's not
+  found: Settings → Optional Features → check for "OpenSSH Client" → Add
+  feature (or as admin PowerShell:
+  `Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0`).
+- **Generate a key pair** if you don't already have one:
+  ```powershell
+  ssh-keygen -t ed25519 -C "cyberdudebivash-deploy"
+  ```
+  Accept the default path. Then view the public half to paste into the
+  provider's "SSH key" field in step 1 below:
+  ```powershell
+  Get-Content $env:USERPROFILE\.ssh\id_ed25519.pub
+  ```
+  (Never paste the *private* key — the one without `.pub` — anywhere.)
+
+From here on, "SSH in" means, from PowerShell: `ssh root@<vps-ip>`. That
+drops you into a real Ubuntu shell on the VPS — every command below runs
+there, typed at the VPS's own prompt, exactly as written, regardless of
+your local OS. `scp <local-file> root@<vps-ip>:/path/` (also built into
+Windows) covers copying a file over later if you ever need to.
+
+Optional, not required: `wsl --install` (one-time, admin PowerShell) gives
+you a full local Ubuntu environment inside Windows if you'd like one for
+browsing the repo — the deploy itself still happens over SSH to the real
+VPS either way, not inside WSL.
+
 1. Create the VPS, note its public IP, SSH in as root (or a sudo user).
 2. Copy this repo onto it, or just download the script directly:
    ```bash
@@ -84,7 +118,8 @@ Ubuntu 22.04 and root/sudo access.
    ```
    (Or clone the repo and run `sudo bash deploy/provision-vps.sh` — same
    effect. Optionally pass a different domain as the second argument if you
-   don't want `api.cyberdudebivash.in`.)
+   don't want `api.cyberdudebivash.in`. This all runs on the VPS, inside
+   the SSH session from step 1 — nothing to install on Windows itself.)
 3. The script installs Python/nginx/certbot, creates a locked-down
    `cyberdudebivash` system user, sets up a venv, installs the systemd
    service (API) and timer (6-hourly real-data seeding from CISA KEV +
