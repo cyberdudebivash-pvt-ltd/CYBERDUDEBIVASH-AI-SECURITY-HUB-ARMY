@@ -36,14 +36,22 @@ crons = ["0 */6 * * *"]
 # response -- see GAP-000/GAP-019 in docs/commercial/COMMERCIAL_PRODUCTION_GAP_REGISTER.md).
 # No Worker Custom Domain has ever been bound to this hostname, so this Worker
 # has only ever been reachable at its own *.workers.dev subdomain.
-# Declaring the route below asks Cloudflare to provision it as a Custom Domain
-# on the next `wrangler deploy` -- this creates/repoints the DNS record and
-# gives the Worker exclusive ownership of the hostname at the edge, ahead of
-# GitHub Pages. If the deploying CI token lacks DNS/zone-edit permission, this
-# will fail loudly in the GitHub Actions log rather than silently no-op --
-# if that happens, bind it by hand instead: Cloudflare dashboard -> Workers &
-# Pages -> cyberdudebivash-army-api -> Settings -> Domains & Routes -> Add ->
-# Custom Domain -> army.cyberdudebivash.in
+#
+# The route below asks Cloudflare to provision army.cyberdudebivash.in as a
+# Custom Domain on `wrangler deploy`. CONFIRMED 2026-08-10 (real deploy log,
+# not a guess): the script/KV/vars deploy fine, but this specific step fails:
+#   [ERROR] A request to the Cloudflare API (.../domains/records) failed.
+#   Hostname 'army.cyberdudebivash.in' already has externally managed DNS
+#   records (A, CNAME, etc). Delete them first or try a different hostname.
+#   [code: 100117]
+# This is NOT a token-permission problem -- the token successfully reached
+# the API and got a structured conflict back. Fix (one manual step, dashboard
+# only, no code can do this): Cloudflare dashboard -> cyberdudebivash.in zone
+# -> DNS -> Records -> delete the existing record for "army" (the one
+# pointing at GitHub Pages) -> then either wait for the next push to
+# worker/** or re-run the failed "deploy-worker" GitHub Actions job. Once
+# that record is gone, this same `wrangler deploy` will create its own
+# Custom Domain DNS record and this route will take effect.
 [[routes]]
 pattern = "army.cyberdudebivash.in"
 custom_domain = true
