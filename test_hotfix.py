@@ -1,7 +1,14 @@
 """
 test_hotfix.py — v185.1 Validation Suite
-42 tests covering severity mapping, IOC validation, report consistency,
-ingestion pipeline, STIX export, rate limiting, and CORS.
+53 unit tests covering severity mapping, IOC validation, report consistency,
+ingestion pipeline, STIX export, and rate limiting in cyberdudebivash_army_backend.py.
+
+Scope note: this suite tests backend business logic in isolation (functions are
+imported and called in-process). It does not exercise the deployed Cloudflare
+Worker, HTTP request handling, authentication, or any payment/entitlement path —
+see docs/commercial/COMMERCIAL_PRODUCTION_GAP_REGISTER.md for what is and isn't
+covered before treating a pass here as a statement about the live product.
+
 Run: python test_hotfix.py
 """
 
@@ -286,7 +293,8 @@ TOTAL = PASS + FAIL
 print(f"\n{'='*60}")
 print(f"RESULTS: {PASS}/{TOTAL} passed, {FAIL}/{TOTAL} failed")
 if FAIL == 0:
-    print("✅ ALL TESTS PASSED. Platform is production-ready.")
+    print("✅ ALL BACKEND UNIT TESTS PASSED. This covers scoring/validation logic only —")
+    print("   it does not certify the deployed Worker, auth, or any payment path.")
     sys.exit(0)
 else:
     print("❌ TESTS FAILED. Do NOT deploy.")

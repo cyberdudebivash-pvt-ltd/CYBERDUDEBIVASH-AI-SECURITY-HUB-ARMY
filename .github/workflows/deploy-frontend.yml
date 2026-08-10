@@ -27,10 +27,20 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Stage public assets only
+        # Publish only the customer-facing marketing pages. Do NOT widen this to
+        # the whole repo root — it previously published backend source, deploy
+        # scripts, the test suite, and a local Cloudflare account-cache file to
+        # a public URL on every push (see docs/commercial/COMMERCIAL_PRODUCTION_GAP_REGISTER.md, GAP-004).
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp -r ecosystem _site/
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
 
       - name: Deploy to GitHub Pages
         id: deployment
