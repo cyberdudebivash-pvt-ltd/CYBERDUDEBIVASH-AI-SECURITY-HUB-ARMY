@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CYBERDUDEBIVASH AI Security Hub — ARMY v185.1</title>
+<title>CYBERDUDEBIVASH ARMY — Standalone AI Threat Intel Feed</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',Roboto,sans-serif;line-height:1.6}
@@ -47,7 +47,7 @@
   </header>
 
   <div class="error-banner" id="errorBanner">
-    ⚠️ Live feed temporarily unavailable. Data refreshes every 2 hours. <a href="https://cyberdudebivash.in" style="color:#00f0ff">Visit main hub →</a>
+    ⚠️ Live feed temporarily unavailable. Check back shortly. <a href="https://cyberdudebivash.in" style="color:#00f0ff">Visit main hub →</a>
   </div>
 
   <div class="metrics">
@@ -67,16 +67,22 @@
   </div>
 
   <footer>
-    CYBERDUDEBIVASH® AI Security Hub — ARMY Dashboard v185.1<br>
+    CYBERDUDEBIVASH® ARMY — Standalone Threat Intelligence Feed<br>
+    Data sourced directly from the CISA Known Exploited Vulnerabilities catalog and FIRST.org EPSS<br>
     © 2026 CYBERDUDEBIVASH Pvt Ltd. All rights reserved.
   </footer>
 </div>
 
 <script>
+// ARMY is standalone — this calls only the ARMY Worker itself (which fetches
+// CISA KEV + EPSS directly, no cyberdudebivash.in involved anywhere in the
+// chain). A prior version also fell back to hitting cyberdudebivash.in
+// directly; that reintroduced the exact dependency ARMY is meant not to
+// have, so it's gone. If the Worker itself is unreachable, the honest
+// "maintenance" state below is the correct outcome, not a fallback to a
+// different platform's API.
 const API_ENDPOINTS = [
   'https://army.cyberdudebivash.in/api/feed',
-  'https://cyberdudebivash.in/api/v1/intel/kev.json',
-  'https://cyberdudebivash.in/api/feed',
 ];
 
 async function fetchWithFallback(endpoints) {
@@ -98,11 +104,8 @@ function renderSkeleton(el) {
   el.innerHTML = '<div class="skeleton"></div>';
 }
 
-// Some upstream responses carry a non-array `feed` (e.g. a source-label string
-// like "cisa-kev") alongside the real advisory list in `items`. Only ever treat
-// an actual array as the advisory list; otherwise fall back to `items` mapped
-// into the same shape, and finally to an empty list — never let a malformed
-// field crash rendering.
+// Defensive: only ever treat an actual array as the advisory list (never a
+// malformed field crash rendering), falling back through feed -> items -> [].
 function normalizeAdvisories(data) {
   if (Array.isArray(data.advisories)) return data.advisories;
   if (Array.isArray(data.feed)) return data.feed;

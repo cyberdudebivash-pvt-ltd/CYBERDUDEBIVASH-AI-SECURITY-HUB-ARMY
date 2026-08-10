@@ -119,13 +119,25 @@ def compute_composite_risk(
         if kev and epss is not None and epss >= 0.5:
             risk = max(risk, 9.0)   # CRITICAL floor for active + high-prob exploitation
         elif kev:
-            risk = max(risk, 5.0)   # HIGH floor
+            # HIGH floor. Was 5.0 — map_cvss_to_severity(5.0) is actually
+            # MEDIUM (it needs >=7.0 for HIGH), so a bare KEV listing (CISA-
+            # confirmed active exploitation, no other data) was silently
+            # scored MEDIUM despite the comment and intent both saying HIGH.
+            # The only test on this branch checked risk_score >= 5.0, never
+            # the resulting severity, so it never caught the mismatch. Fixed
+            # to actually land in the HIGH band; also now matches the same
+            # KEV-floor logic in worker/src/index.js's severityFromKevEpss().
+            risk = max(risk, 7.0)
         elif epss is not None and epss >= 0.5:
             risk = max(risk, 4.0)   # MEDIUM floor
         elif epss is not None and epss >= 0.1:
             risk = max(risk, 2.0)   # LOW floor
         else:
-            risk = max(risk, 0.5)   # INFO floor
+            # LOW floor. An EPSS score below 0.1 is still a real, if small,
+            # signal — not "no data" — so this lands in LOW via
+            # map_cvss_to_severity, same as the branch above. The explicit
+            # UNKNOWN override just below handles the true no-signal case.
+            risk = max(risk, 0.5)
 
     severity = map_cvss_to_severity(risk)
 
