@@ -1,0 +1,43 @@
+[Unit]
+Description=CYBERDUDEBIVASH AI Security Hub API (cyberdudebivash_army_backend.py)
+After=network.target
+
+[Service]
+Type=simple
+User=cyberdudebivash
+Group=cyberdudebivash
+WorkingDirectory=/opt/cyberdudebivash-api/app
+# "-" prefix = optional; the service still starts if this file is briefly
+# missing during provisioning, rather than hard-failing.
+EnvironmentFile=-/opt/cyberdudebivash-api/.env
+# --workers is deliberately 1, not N. IngestionPipeline and RateLimiter in
+# cyberdudebivash_army_backend.py are in-memory, per-process singletons with
+# no shared store (see docs/commercial/COMMERCIAL_PRODUCTION_GAP_REGISTER.md).
+# Running multiple uvicorn worker processes would give each its own copy of
+# the data — a request could hit a worker that never saw an ingested advisory.
+# Do not raise this until the backend has real shared persistence (a database
+# or Redis), otherwise you'll get intermittent, confusing "missing data" bugs.
+#
+# --proxy-headers --forwarded-allow-ips='127.0.0.1' is NOT optional: the
+# backend's rate limiter keys on request.client.host directly (no
+# X-Forwarded-For handling of its own). Without this flag, nginx sitting in
+# front means every request looks like it comes from 127.0.0.1, and the
+# entire internet shares one FREE-tier rate-limit bucket (100/day total).
+# This flag makes uvicorn read nginx's X-Forwarded-For and set the real
+# client IP before the app ever sees the request — no backend code change
+# needed, but nginx.conf MUST send X-Forwarded-For (see deploy/nginx/).
+ExecStart=/opt/cyberdudebivash-api/venv/bin/uvicorn cyberdudebivash_army_backend:app \
+    --host 127.0.0.1 --port 8000 --workers 1 \
+    --proxy-headers --forwarded-allow-ips='127.0.0.1'
+Restart=on-failure
+RestartSec=5
+
+# Hardening — the app needs no filesystem writes and no elevated privileges
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=
+
+[Install]
+WantedBy=multi-user.target

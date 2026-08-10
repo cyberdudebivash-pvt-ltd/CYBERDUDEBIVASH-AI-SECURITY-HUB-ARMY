@@ -1,0 +1,81 @@
+# TEMPLATE — not active. This is not in .github/workflows/, so it does not
+# run. Copy it there (as e.g. deploy-backend.yml) only once you have a real
+# VPS provisioned via deploy/provision-vps.sh and have added the three
+# secrets below — enabling this blind, without a real host to deploy to,
+# would just fail loudly on every push to main.
+#
+# Setup (GitHub repo → Settings → Secrets and variables → Actions):
+#   VPS_HOST     — the VPS's IP or hostname
+#   VPS_SSH_USER — a sudo-capable user on the VPS (NOT root — create one with
+#                  `adduser deploy && usermod -aG sudo deploy` and use that)
+#   VPS_SSH_KEY  — the PRIVATE half of an SSH keypair whose PUBLIC half is in
+#                  that user's ~/.ssh/authorized_keys on the VPS. Generate a
+#                  dedicated deploy-only keypair for this — do not reuse your
+#                  personal SSH key.
+#
+# This intentionally uses plain ssh/rsync rather than a third-party
+# marketplace Action, so nothing outside GitHub's own actions/* needs to be
+# trusted with a key that has production access.
+#
+# This job replaces cyberdudebivash.in/api's app files and restarts the
+# systemd service — it does not touch DNS, TLS, or nginx config, all of
+# which are one-time setup steps (see deploy/README.md), not part of every
+# deploy.
+
+name: Deploy Backend to VPS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cyberdudebivash_army_backend.py"
+      - "requirements.txt"
+      - "deploy/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python test_hotfix.py
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add VPS to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Load deploy key
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/deploy_key
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+
+      - name: Sync backend files
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            --exclude '.git' --exclude '.github' --exclude 'ecosystem' \
+            ./ "${{ secrets.VPS_SSH_USER }}@${{ secrets.VPS_HOST }}:/opt/cyberdudebivash-api/app/"
+
+      - name: Install deps + restart service
+        run: |
+          ssh -i ~/.ssh/deploy_key "${{ secrets.VPS_SSH_USER }}@${{ secrets.VPS_HOST }}" '
+            set -e
+            sudo /opt/cyberdudebivash-api/venv/bin/pip install --quiet -r /opt/cyberdudebivash-api/app/requirements.txt
+            sudo systemctl restart cyberdudebivash-api.service
+            sleep 2
+            curl -sf http://127.0.0.1:8000/api/health
+          '
+
+      - name: Clean up key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

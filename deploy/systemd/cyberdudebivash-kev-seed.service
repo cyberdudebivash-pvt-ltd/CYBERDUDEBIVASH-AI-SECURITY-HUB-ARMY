@@ -1,0 +1,11 @@
+[Unit]
+Description=Seed CYBERDUDEBIVASH API with real CISA KEV + EPSS data
+After=cyberdudebivash-api.service
+Requires=cyberdudebivash-api.service
+
+[Service]
+Type=oneshot
+User=cyberdudebivash
+Group=cyberdudebivash
+WorkingDirectory=/opt/cyberdudebivash-api/app
+ExecStart=/opt/cyberdudebivash-api/venv/bin/python deploy/seed_kev_feed.py --backend-url http://127.0.0.1:8000
